@@ -159,6 +159,27 @@ var SPEICHER_KEY = "bruchrechen-trainer";
 
 function rnd(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
 
+function dezimalAlsBruchTex(wert) {
+  // Näherungsweise in einen kleinen Bruch umwandeln, damit auch
+  // Ersatz-Distraktoren nicht als Dezimalzahlen auffallen.
+  if (!Number.isFinite(wert)) return String(wert);
+  var ganz = Math.round(wert);
+  if (Math.abs(wert - ganz) < 0.0005) return String(ganz);
+
+  var besterZ = Math.round(wert), besterN = 1, besterFehler = Math.abs(wert - besterZ);
+  for (var n = 2; n <= 1000; n++) {
+    var z = Math.round(wert * n);
+    var fehler = Math.abs(wert - z / n);
+    if (fehler < besterFehler) {
+      besterFehler = fehler; besterZ = z; besterN = n;
+      if (fehler < 0.00005) break;
+    }
+  }
+  var g = ggT(besterZ, besterN);
+  besterZ /= g; besterN /= g;
+  return besterN === 1 ? String(besterZ) : '\\frac{' + besterZ + '}{' + besterN + '}';
+}
+
 function erzeugeDistraktoren(antwort, prim) {
   var uniq = [];
   prim.forEach(function(f) { if (Math.abs(f - antwort) > 0.001 && uniq.indexOf(f) === -1 && f >= 0) uniq.push(f); });
@@ -335,13 +356,19 @@ function renderAufgabe() {
     opt.forEach(function (o) {
       var cls = "";
       if (ergebnis !== null) { if (Math.abs(o - aufgabe.antwort) < 0.005) cls = "richtig"; else if (Math.abs(o - auswahl) < 0.005) cls = "falsch"; else cls = "gedimmt"; }
-      var label = o;
-      if (Math.abs(o - aufgabe.antwort) < 0.005 && aufgabe.bruchStr) { label = "$" + aufgabe.bruchStr + "$"; }
+      // Alle Antwortoptionen als Brüche darstellen – nicht nur die richtige.
+      // Dadurch sind die Distraktoren optisch gleichwertig und Dezimalzahlen
+      // verraten nicht mehr sofort die richtige Antwort.
+      var label = "$" + (
+        Math.abs(o - aufgabe.antwort) < 0.005 && aufgabe.bruchStr
+          ? aufgabe.bruchStr
+          : dezimalAlsBruchTex(o)
+      ) + "$";
       html += '<button class="' + cls + '" ' + (ergebnis !== null ? "disabled" : "onclick=\"beantworten(" + o + ')"') + ">" + label + "</button>";
     });
     box.className = "mc"; box.innerHTML = html;
     
-    // Die richtige Antwort ist mit $...$ markiert; Delimiter vor KaTeX entfernen.
+    // Alle Antwortoptionen sind mit $...$ markiert; Delimiter vor KaTeX entfernen.
     if (typeof katex !== 'undefined' && katex) {
       box.querySelectorAll('button').forEach(function (b) {
         var txt = b.textContent.trim();
