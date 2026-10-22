@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Adaptiver Mathe-Trainer 🚀</title>
+<title>Mathe-Trainer: Rechengesetze 🧮</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: system-ui, -apple-system, sans-serif; background: #0f172a; color: #f1f5f9; padding: 16px; }
@@ -35,7 +35,7 @@
   .tabs { display: flex; gap: 2px; background: #334155; border-radius: 8px; padding: 3px; }
   .tabs button { border: none; background: none; font-size: 12px; padding: 5px 10px; border-radius: 6px; color: #94a3b8; cursor: pointer; }
   .tabs button.aktiv { background: #1e293b; color: #f1f5f9; font-weight: 600; box-shadow: 0 1px 2px rgba(0,0,0,.06); }
-  .frage { text-align: center; font-size: 42px; font-weight: 700; padding: 22px 0; letter-spacing: .03em; }
+  .frage { text-align: center; font-size: 34px; font-weight: 700; padding: 24px 0; letter-spacing: .03em; line-height: 1.4; }
   .mc { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   .mc button { font-size: 20px; font-weight: 600; padding: 14px; border-radius: 12px; border: 2px solid #334155; background: #0f172a; color: #f1f5f9; cursor: pointer; transition: background .15s; }
   .mc button:hover:not(:disabled) { background: #1e3a5f; }
@@ -43,13 +43,14 @@
   .mc button.falsch { background: #7f1d1d; border-color: #fb7185; }
   .mc button.gedimmt { opacity: .55; }
   .eingabe { display: flex; gap: 8px; justify-content: center; }
-  .eingabe input { width: 130px; text-align: center; font-size: 22px; font-weight: 600; border: 2px solid #334155; border-radius: 12px; padding: 10px; background: #0f172a; color: #f1f5f9; }
+  .eingabe input { width: 140px; text-align: center; font-size: 22px; font-weight: 600; border: 2px solid #334155; border-radius: 12px; padding: 10px; background: #0f172a; color: #f1f5f9; }
   .eingabe input:focus { outline: none; border-color: #38bdf8; }
   .eingabe button, .weiter { background: #38bdf8; color: #0f172a; font-weight: 600; border: none; border-radius: 12px; padding: 10px 22px; font-size: 14px; cursor: pointer; }
   .eingabe button:disabled { opacity: .4; cursor: default; }
-  .feedback { margin-top: 16px; border-radius: 12px; padding: 14px; font-weight: 500; }
+  .feedback { margin-top: 16px; border-radius: 12px; padding: 14px; font-weight: 500; font-size: 15px; }
   .feedback.ok { background: #064e3b; color: #6ee7b7; }
   .feedback.no { background: #7f1d1d; color: #fca5a5; }
+  .feedback .hinweis { color: #fbbf24; font-weight: 700; }
   .weiter { width: 100%; margin-top: 10px; background: #38bdf8; color: #0f172a; }
   .weiter:hover { background: #0ea5e9; }
   .analyse { background: #1e3a5f; border: 1px solid #334155; border-radius: 14px; padding: 14px; font-size: 13px; color: #7dd3fc; }
@@ -67,15 +68,15 @@
   .laden:hover { background: #0ea5e9; }
   .msg { font-size: 12px; margin-top: 8px; }
   .msg.ok { color: #6ee7b7; } .msg.no { color: #fca5a5; }
-  @media (max-width: 640px) { .skills { grid-template-columns: repeat(5, 1fr); gap: 4px; } .panel-body { grid-template-columns: 1fr; } .frage { font-size: 32px; } }
+  @media (max-width: 640px) { .skills { grid-template-columns: repeat(5, 1fr); gap: 4px; } .panel-body { grid-template-columns: 1fr; } .frage { font-size: 26px; } }
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="kopf">
     <div>
-      <h1>🧮 Adaptiver Mathe-Trainer 🚀</h1>
-      <div class="sub">Die Mini-KI wählt Themen &amp; Schwierigkeit passend zu dir.</div>
+      <h1>🧮 Mathe-Trainer: Rechengesetze</h1>
+      <div class="sub">Adaptive KI – Punkt vor Strich, Distributivgesetz, Klammern &amp; mehr</div>
     </div>
     <div class="punkte">
       <div class="zahl" id="scoreEl">0</div>
@@ -136,26 +137,26 @@
 
 <script>
 /* ============================================================
-   Engine (adaptives Regelwerk)
+   Mathe-Engine: Rechengesetze (Distributiv, Assoziativ, Kommutativ, Punkt vor Strich)
    ============================================================ */
 var THEMEN = [
   { id: "add", name: "Addition" },
   { id: "sub", name: "Subtraktion" },
   { id: "mul", name: "Multiplikation" },
   { id: "div", name: "Division" },
-  { id: "gemischt", name: "Gemischte Terme" }
+  { id: "gemischt", name: "Terme &amp; Regeln" }
 ];
 var TIDS = THEMEN.map(function (t) { return t.id; });
-var SPEICHER_KEY = "mathe-trainer-spielstand";
+var SPEICHER_KEY = "mathe-trainer-rechengesetze";
 
 function rnd(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
 
-function erzeugeDistraktoren(antwort, primäre, thema) {
+function erzeugeDistraktoren(antwort, prim) {
   var uniq = [];
-  primäre.forEach(function(f) {
+  prim.forEach(function(f) {
     if (f !== antwort && uniq.indexOf(f) === -1 && f >= 0) uniq.push(f);
   });
-  var fallbacks = [antwort + 1, antwort - 1, antwort + 2, antwort - 2, antwort + 5, antwort - 5, antwort + 10];
+  var fallbacks = [antwort + 1, antwort - 1, antwort + 2, antwort - 2, antwort + 5, antwort - 5];
   for (var i = 0; i < fallbacks.length && uniq.length < 3; i++) {
     var v = fallbacks[i];
     if (v !== antwort && uniq.indexOf(v) === -1 && v >= 0) uniq.push(v);
@@ -169,46 +170,198 @@ function erzeugeDistraktoren(antwort, primäre, thema) {
 }
 
 function makeAufgabe(themaId, diff) {
-  var d = Math.max(1, Math.min(5, diff)), a, b, frage, antwort, distr, c, e, prim;
+  var d = Math.max(1, Math.min(5, diff));
+  var a, b, c, frage, antwort, prim = [], hinweis = "";
+
   if (themaId === "add") {
-    var max = [10, 20, 50, 100, 200][d - 1];
-    a = rnd(2, max); b = rnd(2, max);
-    frage = a + " + " + b; antwort = a + b;
-    prim = [a + b + 1, a + b - 1, a + b + 10, a + b - 10];
+    // Addition: Zehnerüberschlag, Kommutativgesetz, geschickt rechnen
+    if (d === 1) {
+      a = rnd(3, 9); b = rnd(3, 9);
+      frage = a + " + " + b; antwort = a + b;
+      prim = [a + b + 1, a + b - 1, (a+1) + b];
+    } else if (d === 2) {
+      a = rnd(8, 19); b = rnd(3, 9);
+      frage = a + " + " + b; antwort = a + b;
+      prim = [a + b + 2, a + b - 2, a + b + 10];
+      hinweis = "Zehnerüberschlag: " + a + " + " + b + " = " + a + " + " + (10 - (a % 10)) + " + " + (b - (10 - (a % 10)));
+    } else if (d === 3) {
+      a = rnd(5, 15); b = rnd(5, 15); c = rnd(3, 12);
+      frage = a + " + " + b + " + " + c; antwort = a + b + c;
+      prim = [a + b + c + 3, a + b + c - 3, (a + b) * c];
+      hinweis = "Tipp: Vertauschen (Kommutativgesetz) – erst " + Math.max(a, b) + " + " + Math.min(a, b) + " = " + (a + b) + ", dann +" + c;
+    } else if (d === 4) {
+      a = rnd(5, 15); b = rnd(5, 15);
+      frage = "(" + a + " + " + b + ") + " + rnd(3, 8); antwort = a + b + rnd(3, 8);
+      prim = [a + b, a + b + rnd(3, 8) + 5, a + b + rnd(3, 8) - 5];
+      hinweis = "Assoziativgesetz: (a + b) + c = a + (b + c). Die Klammer ändert nichts!";
+    } else {
+      a = rnd(2, 9); b = rnd(2, 9); c = rnd(2, 9);
+      // Geschickt: a + b + c, wobei a+b Zehner ergibt
+      var sum1 = a + b;
+      frage = a + " + " + b + " + " + c; antwort = sum1 + c;
+      prim = [a + c + b, sum1 + c + 2, c * (a + b)];
+      hinweis = "Geschickt rechnen: " + a + " + " + b + " = " + sum1 + " (gibt zusammen " + (sum1 >= 10 ? "≥ 10" : "< 10") + "), dann +" + c;
+    }
   } else if (themaId === "sub") {
-    var max2 = [10, 20, 50, 100, 200][d - 1];
-    a = rnd(5, max2); b = rnd(2, a);
-    frage = a + " − " + b; antwort = a - b;
-    prim = [a - b + 1, a - b - 1, b - a, a - b + 10, a - b - 10];
+    // Subtraktion: Ergänzungsaufgaben, Unterschied, negative Ergebnisse vermeiden
+    if (d === 1) {
+      a = rnd(8, 18); b = rnd(2, 7);
+      frage = a + " − " + b; antwort = a - b;
+      prim = [a - b + 1, a - b - 1, b - a];
+    } else if (d === 2) {
+      a = rnd(15, 30); b = rnd(3, 12);
+      frage = a + " − " + b; antwort = a - b;
+      prim = [a - b + 2, a - b - 2, a / 2];
+    } else if (d === 3) {
+      a = rnd(10, 25); b = rnd(3, 8); c = rnd(2, 6);
+      frage = a + " − " + b + " − " + c; antwort = a - b - c;
+      prim = [a - (b + c) + 1, a - b - c - 2, a - b + c];
+      hinweis = "Erst " + b + " + " + c + " = " + (b + c) + ", dann " + a + " − " + (b + c) + " = " + (a - b - c);
+    } else if (d === 4) {
+      a = rnd(6, 20); b = rnd(2, 5);
+      frage = "(" + a + " − " + b + ") − " + rnd(1, 4); antwort = a - b - rnd(1, 4);
+      prim = [a - b, a - b - rnd(1, 4) + 3, (a - b) * 2];
+    } else {
+      a = rnd(10, 30); b = rnd(2, a - 1);
+      // Ergänzung: Welche Zahl fehlt?  ... - b = c → gesucht: a
+      var c2 = rnd(2, Math.min(10, a - b - 1));
+      frage = "☐ − " + b + " = " + c2 + "  →  ☐ = ?";
+      antwort = b + c2;
+      prim = [Math.abs(b - c2), b + c2 + 2, b * c2];
+      hinweis = "Umkehraufgabe: ☐ = " + b + " + " + c2;
+    }
   } else if (themaId === "mul") {
-    var m = [5, 10, 12, 15, 20][d - 1];
-    a = rnd(2, m); b = rnd(2, m);
-    frage = a + " · " + b; antwort = a * b;
-    prim = [(a-1)*b, a*(b-1), (a+1)*b, a*(b+1), a+b];
+    // Multiplikation: Einmaleins, Distributivgesetz vorbereiten
+    if (d === 1) {
+      a = rnd(2, 9); b = rnd(2, 9);
+      frage = a + " · " + b; antwort = a * b;
+      prim = [(a-1)*b, a*(b-1), a*b + a];
+    } else if (d === 2) {
+      a = rnd(2, 9); b = rnd(2, 9);
+      frage = a + " · " + b + " (Wie hieß die Nachbaraufgabe " + a + " · " + (b-1) + "?)";
+      antwort = a * b;
+      prim = [a * (b-1), a * (b+1), a * b + a];
+      hinweis = (a * (b-1)) + " + " + a + " = " + (a*(b-1) + a) + " = " + a + " · " + b;
+    } else if (d === 3) {
+      a = rnd(3, 9); b = rnd(2, 5);
+      frage = a + " · " + b + " + " + a + " · " + rnd(2, 4); // Distributiv: a·b + a·c = a·(b+c)
+      c = rnd(2, 4);
+      frage = a + " · " + b + " + " + a + " · " + c;
+      antwort = a * b + a * c;
+      prim = [a * (b + c) + 5, a * (b * c), a * b * c];
+      hinweis = "Distributivgesetz: " + a + " · " + b + " + " + a + " · " + c + " = " + a + " · (" + b + " + " + c + ") = " + a + " · " + (b + c) + " = " + antwort;
+    } else if (d === 4) {
+      a = rnd(3, 8); b = rnd(2, 6);
+      frage = a + " · (" + b + " + " + rnd(2, 5) + ")"; // Ausmultiplizieren
+      c = rnd(2, 5);
+      frage = a + " · (" + b + " + " + c + ")";
+      antwort = a * (b + c);
+      prim = [a * b + c, a * b + a + c, a * (b + c) + 3];
+      hinweis = "Ausmultiplizieren: " + a + " · " + b + " + " + a + " · " + c + " = " + (a*b) + " + " + (a*c) + " = " + antwort;
+    } else {
+      a = rnd(4, 9);
+      // Umkehrung: Ausklammern
+      var t1 = rnd(2, 5), t2 = rnd(2, 5);
+      frage = a + " · " + t1 + " + " + a + " · " + t2 + "  (Klammere " + a + " aus!)";
+      antwort = a * (t1 + t2);
+      prim = [a * t1 * t2, a * t1 + a * t2 + a, a * (t1 * t2)];
+      hinweis = "Ausklammern: " + a + " · (" + t1 + " + " + t2 + ") = " + antwort;
+    }
   } else if (themaId === "div") {
-    var m2 = [5, 10, 12, 15, 20][d - 1];
-    b = rnd(2, m2); antwort = rnd(2, m2); a = b * antwort;
-    frage = a + " ÷ " + b; antwort = a / b;
-    prim = [antwort + 1, antwort - 1, b, antwort * 2];
+    // Division: Umkehrung der Multiplikation, Teilbarkeit
+    if (d === 1) {
+      antwort = rnd(2, 9); b = rnd(2, 9); a = antwort * b;
+      frage = a + " ÷ " + b; antwort = a / b;
+      prim = [antwort + 1, antwort - 1, b];
+    } else if (d === 2) {
+      antwort = rnd(2, 9); b = rnd(2, 9); a = antwort * b;
+      frage = a + " ÷ " + b + " (Umkehrung: " + b + " · ☐ = " + a + ")";
+      antwort = a / b;
+      prim = [antwort + 2, antwort - 2, b + antwort];
+      hinweis = "Denk an die Malreihe von " + b + ": " + b + " · " + antwort + " = " + a;
+    } else if (d === 3) {
+      antwort = rnd(3, 8); b = rnd(2, 6); a = antwort * b;
+      frage = "(☐ · " + b + ") ÷ " + b + " = ?"; antwort = a / b;
+      prim = [a, antwort + 1, b];
+      hinweis = "Eine Zahl erst malnehmen und dann durch die gleiche Zahl teilen – das gibt die Zahl selbst!";
+    } else if (d === 4) {
+      antwort = rnd(3, 9); b = rnd(2, 6); a = antwort * b;
+      frage = a + " ÷ " + b + " = ?  (Teile schrittweise: erst " + (a - (antwort % 2 === 0 ? b : 0)) + " ÷ " + b + ", dann den Rest)";
+      antwort = a / b;
+      prim = [antwort + 1, antwort - 1, b * 2];
+    } else {
+      // Teilbarkeitsregeln
+      a = rnd(12, 48); b = rnd(2, 9);
+      while (a % b !== 0) { a = rnd(12, 48); }
+      frage = a + " ÷ " + b + " (Wie kannst du schnell erkennen, ob " + a + " durch " + b + " teilbar ist?)";
+      antwort = a / b;
+      prim = [Math.floor(a / b) + 1, Math.floor(a / b) - 1, a / (b * 2)];
+      var hilfe = "";
+      if (b === 2) hilfe = "Gerade Zahl?";
+      else if (b === 3) hilfe = "Quersumme von " + a + " = " + (a.toString().split('').reduce(function(s, d) { return s + parseInt(d); }, 0));
+      else if (b === 5) hilfe = "Endet auf 0 oder 5?";
+      else if (b === 9) hilfe = "Quersumme durch 9 teilbar?";
+      else hilfe = "Die " + b + "er-Reihe: " + b + " · " + antwort + " = " + a;
+      hinweis = hilfe;
+    }
   } else {
-    a = rnd(2, 5 * d); b = rnd(2, 5 * d); c = rnd(2, 3 * d);
-    if (d <= 2) {
+    // Gemischte Terme & Rechenregeln: Punkt vor Strich, Distributiv, Klammern
+    if (d === 1) {
+      a = rnd(2, 5); b = rnd(2, 5); c = rnd(2, 5);
       frage = a + " + " + b + " · " + c;
       antwort = a + b * c;
-      prim = [(a + b) * c, a + b + c, a * b + c];
-    } else if (d === 3) {
+      prim = [(a + b) * c, a * b + c, a + b + c];
+      hinweis = "Punkt vor Strich! Erst " + b + " · " + c + " = " + (b*c) + ", dann " + a + " + " + (b*c);
+    } else if (d === 2) {
+      a = rnd(2, 5); b = rnd(2, 5); c = rnd(2, 5);
       frage = "(" + a + " + " + b + ") · " + c;
       antwort = (a + b) * c;
-      prim = [a + b * c, (a + b) * c + c, a * b + c];
+      prim = [a + b * c, (a + b) + c, a * b * c];
+      hinweis = "Klammer zuerst! (" + a + " + " + b + ") = " + (a+b) + ", dann ·" + c + " = " + antwort;
+    } else if (d === 3) {
+      a = rnd(2, 8); b = rnd(2, 8); c = rnd(2, 6);
+      // a·b + a·c → Distributivgesetz erkennen
+      frage = a + " · " + b + " + " + a + " · " + c;
+      antwort = a * b + a * c;
+      prim = [a * (b + c) + 3, a * (b * c), (a + a) * (b + c)];
+      hinweis = "Distributiv: " + a + " · " + b + " + " + a + " · " + c + " = " + a + " · (" + b + " + " + c + ")";
+    } else if (d === 4) {
+      a = rnd(2, 6); b = rnd(2, 6); c = rnd(2, 6);
+      frage = a + " · " + b + " − " + a + " · " + c;
+      antwort = a * b - a * c;
+      prim = [a * (b - c) + 2, a * (b + c), (a * b) - c];
+      hinweis = "Distributiv mit Minus: " + a + " · " + b + " − " + a + " · " + c + " = " + a + " · (" + b + " − " + c + ")";
     } else {
-      e = rnd(2, 4);
-      frage = a + " · " + b + " − " + c + " · " + e;
-      antwort = a * b - c * e;
-      prim = [a * b + c * e, a * b - c * e + e, (a - c) * (b - e), a * b - c - e];
+      a = rnd(2, 5); b = rnd(2, 5); c = rnd(2, 5);
+      // Gemischte Terme: a·b + c·d oder (a+b)·(c+d)
+      var typ = rnd(1, 2);
+      if (typ === 1) {
+        var d2 = rnd(2, 5);
+        frage = a + " · " + b + " + " + c + " · " + d2;
+        antwort = a * b + c * d2;
+        prim = [(a + b) * (c + d2), a * b * c * d2, a * b + c + d2];
+        hinweis = "Punkt vor Strich: erst " + a + "·" + b + "=" + (a*b) + " und " + c + "·" + d2 + "=" + (c*d2) + ", dann addieren.";
+      } else {
+        frage = "(" + a + " + " + b + ") · (" + c + " + " + rnd(1, 4) + ")";
+        var d3 = rnd(1, 4);
+        frage = "(" + a + " + " + b + ") · (" + c + " + " + d3 + ")";
+        antwort = (a + b) * (c + d3);
+        prim = [a + b * c + d3, (a + b) * c + d3, a * c + b * d3];
+        hinweis = "Erst die Klammern: (" + (a+b) + ") · (" + (c+d3) + ") = " + antwort;
+      }
     }
   }
-  distr = erzeugeDistraktoren(antwort, prim, themaId);
-  return { themaId: themaId, frage: frage, antwort: antwort, distr: distr, diff: d };
+
+  var distr = erzeugeDistraktoren(antwort, prim);
+
+  return {
+    themaId: themaId,
+    frage: frage,
+    antwort: antwort,
+    distr: distr,
+    diff: d,
+    hinweis: hinweis
+  };
 }
 
 function initEngine() {
@@ -240,7 +393,7 @@ function tippFuer(e) {
 }
 
 /* ============================================================
-   Gadget-System (Weltraum)
+   Gadget-System
    ============================================================ */
 var GADGETS = [
   { emoji: "🌍", name: "Erde", punkte: 0 },
@@ -253,7 +406,7 @@ var GADGETS = [
 ];
 
 function titelFuerPunkte(p) {
-  if (p >= 100) return "👽 Weltraum-Legende";
+  if (p >= 100) return "👽 Mathe-Genie";
   if (p >= 75) return "🌌 Galaxis-Entdecker";
   if (p >= 50) return "👨‍🚀 Astronaut";
   if (p >= 30) return "🛸 Raumstations-Crew";
@@ -400,7 +553,7 @@ function shareLink() {
 }
 
 /* ============================================================
-   SCORM 1.2-Wrapper (Moodle/LMS); no-op wenn kein LMS
+   SCORM 1.2-Wrapper
    ============================================================ */
 var scormAPI = null;
 (function () {
@@ -464,7 +617,7 @@ function neueAufgabe() {
 function beantworten(wert) {
   if (ergebnis !== null) return;
   var richtig = Number(wert) === aufgabe.antwort;
-  auswahl = wert; ergebnis = richtig;
+  auswahl = Number(wert); ergebnis = richtig;
   if (richtig) score++;
   feedback(engine, aufgabe.themaId, richtig, (Date.now() - startZeit) / 1000);
   speichere(); lmsSync();
@@ -511,13 +664,13 @@ function renderSkills() {
 function renderAufgabe() {
   var thema = THEMEN.filter(function (t) { return t.id === aufgabe.themaId; })[0];
   document.getElementById("themaBadge").textContent = thema.name.toUpperCase();
-  document.getElementById("frageEl").textContent = aufgabe.frage + " = ?";
+  document.getElementById("frageEl").textContent = aufgabe.frage;
   document.getElementById("tabMC").className = modus === "mc" ? "aktiv" : "";
   document.getElementById("tabIN").className = modus === "input" ? "aktiv" : "";
   var box = document.getElementById("antwortBox"), html = "";
   if (modus === "mc") {
     var opt = [aufgabe.antwort].concat(aufgabe.distr);
-    while (opt.length < 4) { var x = aufgabe.antwort + (opt.length * 3); if (opt.indexOf(x) === -1 && x >= 0) opt.push(x); else break; }
+    while (opt.length < 4) { var x = aufgabe.antwort + (opt.length * 2); if (opt.indexOf(x) === -1 && x >= 0) opt.push(x); else break; }
     opt.sort(function () { return Math.random() - 0.5; });
     opt.forEach(function (o) {
       var cls = "";
@@ -539,9 +692,11 @@ function renderAufgabe() {
   }
   var fb = document.getElementById("feedbackBox");
   if (ergebnis !== null) {
+    var zusatz = ergebnis && aufgabe.hinweis ? ' 💡 <span class="hinweis">' + aufgabe.hinweis + "</span>" : "";
+    zusatz = zusatz || (!ergebnis && aufgabe.hinweis ? '<br><span class="hinweis">💡 ' + aufgabe.hinweis + "</span>" : "");
     fb.innerHTML = '<div class="feedback ' + (ergebnis ? "ok" : "no") + '">' +
-      (ergebnis ? "✅ Richtig! Schwierigkeit steigt, sobald du 2x in Folge richtig bist."
-                : "❌ Leider falsch. Richtig ist " + aufgabe.antwort + ". Wir üben das weiter.") +
+      (ergebnis ? "✅ Richtig!" : "❌ Leider falsch. Richtig ist " + aufgabe.antwort + ".") +
+      zusatz +
       '</div><button class="weiter" onclick="weiter()">Nächste Aufgabe →</button>';
   } else fb.innerHTML = "";
 }
@@ -576,7 +731,7 @@ document.addEventListener("keydown", function (e) {
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") { e.preventDefault(); speichere(); renderStatus(); }
 });
 
-// Start: QR-Hash (falls gescannt) > LMS (falls vorhanden) > localStorage > frisch
+// Start: QR-Hash > LMS > localStorage > frisch
 (function start() {
   window._hashGeladen = ladeAusHash();
   if (window._hashGeladen) { speichere(); lmsSync(); }
