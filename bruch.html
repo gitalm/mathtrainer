@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Bruchrechen-Trainer 🧮</title>
-<link rel="stylesheet" href="katex/katex.min.css">
-<script src="katex/katex.min.js"></script>
+<link rel="stylesheet" href="katex/katex.min.css" onerror="this.onerror=null;this.href='https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.css'">
+<script src="katex/katex.min.js" onerror="this.onerror=null;var s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.js';s.onload=function(){if(typeof render==='function')render()};document.head.appendChild(s)"></script>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: system-ui, -apple-system, sans-serif; background: #0f172a; color: #f1f5f9; padding: 16px; }
@@ -121,20 +121,24 @@
    KaTeX-Global-Render-Funktion: Wandelt ALLE $...$ im HTML um
    ============================================================ */
 function renderAlleFormeln(element) {
-  if (typeof katex === 'undefined' || !katex) return;
-  var html = element.innerHTML;
-  // Ersetze alle $...$ durch gerenderte KaTeX-Formeln
-  var ersetzt = html.replace(/\$(\d*)\$\$/g, function(m, z) {
-    return m; // einzelne $$ nicht ersetzen (könnten leere $ vorkommen)
-  });
-  ersetzt = ersetzt.replace(/\$(.+?)\$/g, function(match, tex) {
+  if (typeof katex === 'undefined' || !katex || !element) return;
+  // Nur explizit mit $...$ markierte Formeln rendern.
+  // Bereits gerenderte KaTeX-Ausgaben enthalten keine solchen äußeren Marker.
+  element.innerHTML = element.innerHTML.replace(/\$(.+?)\$/g, function (match, tex) {
     try {
       return katex.renderToString(tex, { displayMode: false, throwOnError: false });
-    } catch(e) {
-      return match; // Fallback: unverändert lassen
+    } catch (e) {
+      return match;
     }
   });
-  element.innerHTML = ersetzt;
+}
+
+// In Hinweisen stehen kurze LaTeX-Ausdrücke neben normalem Text.
+// Diese werden markiert, damit dieselbe Renderfunktion sie zuverlässig erkennt.
+function hinweisMitFormeln(text) {
+  return String(text || '').replace(/\\frac\{[^{}]*\}\{[^{}]*\}|\\(?:rightarrow|left|right|cdot|times)\b/g, function (m) {
+    return '$' + m + '$';
+  });
 }
 
 /* ============================================================
@@ -181,14 +185,14 @@ function makeBruchAufgabe(themaId, diff) {
     else if (d <= 4) { n1 = rnd(2, 6); n2 = rnd(3, 8); while (n2 === n1 || n2 % n1 === 0 || n1 % n2 === 0) n2 = rnd(3, 8); z1 = rnd(2, n1); z2 = rnd(1, n2 - 1); var g2 = kgV(n1, n2); var f1b = g2 / n1, f2b = g2 / n2; while (z1 * f1b <= z2 * f2b) { z1 = rnd(2, n1); z2 = rnd(1, n2 - 1); } frageTex = bruchTex(z1, n1) + " - " + bruchTex(z2, n2); ergZ = z1 * f1b - z2 * f2b; ergN = g2; hinweis = "Hauptnenner: " + g2; }
     else { n1 = rnd(3, 7); n2 = rnd(2, 5); z1 = rnd(n1 + 1, 2 * n1); z2 = rnd(1, n2 - 1); frageTex = bruchTex(z1, n1) + " - " + bruchTex(z2, n2); var g4 = kgV(n1, n2); ergZ = z1 * (g4/n1) - z2 * (g4/n2); ergN = g4; hinweis = "Gemischte Nenner \\rightarrow Hauptnenner " + g4; }
   } else if (themaId === "mul") {
-    if (d === 1) { z1 = rnd(1, 5); n1 = rnd(2, 6); z2 = rnd(1, 5); n2 = rnd(2, 6); frageTex = bruchTex(z1, n1) + " \\cdot " + bruchTex(z2, n2); ergZ = z1 * z2; ergN = n1 * n2; hinweis = "Z\\\"ahler \\times Z\\\"ahler, Nenner \\times Nenner"; }
+    if (d === 1) { z1 = rnd(1, 5); n1 = rnd(2, 6); z2 = rnd(1, 5); n2 = rnd(2, 6); frageTex = bruchTex(z1, n1) + " \\cdot " + bruchTex(z2, n2); ergZ = z1 * z2; ergN = n1 * n2; hinweis = "Zähler \\times Zähler, Nenner \\times Nenner"; }
     else if (d === 2) { var ganze = rnd(2, 5); z2 = rnd(1, 5); n2 = rnd(2, 6); frageTex = ganze + " \\cdot " + bruchTex(z2, n2); ergZ = ganze * z2; ergN = n2; hinweis = "Ganze Zahl als Bruch: " + ganze + " = " + bruchTex(ganze, 1); }
-    else if (d <= 4) { z1 = rnd(2, 7); n1 = rnd(3, 8); z2 = rnd(2, 7); n2 = rnd(3, 8); frageTex = bruchTex(z1, n1) + " \\cdot " + bruchTex(z2, n2); ergZ = z1 * z2; ergN = n1 * n2; var t = ggT(ergZ, ergN); if (t > 1) hinweis = "K\\\"urze mit " + t + ": " + bruchTex(ergZ/t, ergN/t); else hinweis = "Z\\\"ahler \\times Z\\\"ahler, Nenner \\times Nenner"; }
-    else { z1 = rnd(1, 4); n1 = rnd(2, 5); z2 = rnd(1, 4); n2 = rnd(2, 5); var z3 = rnd(1, 4), n3 = rnd(2, 5); frageTex = bruchTex(z1, n1) + " \\cdot " + bruchTex(z2, n2) + " \\cdot " + bruchTex(z3, n3); ergZ = z1 * z2 * z3; ergN = n1 * n2 * n3; var t2 = ggT(ergZ, ergN); if (t2 > 1) hinweis = "K\\\"urze mit " + t2; else hinweis = "Alle Z\\\"ahler und Nenner multiplizieren"; }
+    else if (d <= 4) { z1 = rnd(2, 7); n1 = rnd(3, 8); z2 = rnd(2, 7); n2 = rnd(3, 8); frageTex = bruchTex(z1, n1) + " \\cdot " + bruchTex(z2, n2); ergZ = z1 * z2; ergN = n1 * n2; var t = ggT(ergZ, ergN); if (t > 1) hinweis = "Kürze mit " + t + ": " + bruchTex(ergZ/t, ergN/t); else hinweis = "Zähler \\times Zähler, Nenner \\times Nenner"; }
+    else { z1 = rnd(1, 4); n1 = rnd(2, 5); z2 = rnd(1, 4); n2 = rnd(2, 5); var z3 = rnd(1, 4), n3 = rnd(2, 5); frageTex = bruchTex(z1, n1) + " \\cdot " + bruchTex(z2, n2) + " \\cdot " + bruchTex(z3, n3); ergZ = z1 * z2 * z3; ergN = n1 * n2 * n3; var t2 = ggT(ergZ, ergN); if (t2 > 1) hinweis = "Kürze mit " + t2; else hinweis = "Alle Zähler und Nenner multiplizieren"; }
   } else if (themaId === "div") {
     if (d === 1) { z1 = rnd(1, 5); n1 = rnd(2, 6); z2 = rnd(1, 5); n2 = rnd(2, 6); frageTex = bruchTex(z1, n1) + " : " + bruchTex(z2, n2); ergZ = z1 * n2; ergN = n1 * z2; hinweis = "Mit dem Kehrwert multiplizieren: " + bruchTex(z1, n1) + " \\cdot " + bruchTex(n2, z2); }
     else if (d === 2) { var ganze2 = rnd(2, 5); z2 = rnd(1, 4); n2 = rnd(2, 5); frageTex = ganze2 + " : " + bruchTex(z2, n2); ergZ = ganze2 * n2; ergN = z2; hinweis = ganze2 + " : " + bruchTex(z2, n2) + " = " + ganze2 + " \\cdot " + bruchTex(n2, z2); }
-    else if (d <= 4) { z1 = rnd(2, 6); n1 = rnd(3, 7); z2 = rnd(2, 6); n2 = rnd(3, 7); frageTex = bruchTex(z1, n1) + " : " + bruchTex(z2, n2); ergZ = z1 * n2; ergN = n1 * z2; var t3 = ggT(ergZ, ergN); if (t3 > 1) hinweis = "Kehrwert, k\\\"urze mit " + t3; else hinweis = "Kehrwert: " + bruchTex(z1, n1) + " \\cdot " + bruchTex(n2, z2); }
+    else if (d <= 4) { z1 = rnd(2, 6); n1 = rnd(3, 7); z2 = rnd(2, 6); n2 = rnd(3, 7); frageTex = bruchTex(z1, n1) + " : " + bruchTex(z2, n2); ergZ = z1 * n2; ergN = n1 * z2; var t3 = ggT(ergZ, ergN); if (t3 > 1) hinweis = "Kehrwert, kürze mit " + t3; else hinweis = "Kehrwert: " + bruchTex(z1, n1) + " \\cdot " + bruchTex(n2, z2); }
     else { var a = rnd(1, 4), b = rnd(2, 5), c = rnd(1, 4), d2 = rnd(2, 5); frageTex = "\\frac{" + bruchTex(a, b) + "}{" + bruchTex(c, d2) + "}"; ergZ = a * d2; ergN = b * c; hinweis = "Doppelbruch: " + bruchTex(a, b) + " : " + bruchTex(c, d2); }
   } else {
     if (d <= 2) { z1 = rnd(1, 4); n1 = rnd(2, 6); z2 = rnd(1, 4); n2 = rnd(2, 6); var op = rnd(1, 2) === 1 ? " + " : " - "; frageTex = bruchTex(z1, n1) + (op === " + " ? " + " : " - ") + bruchTex(z2, n2); if (op === " + ") { ergZ = z1 * n2 + z2 * n1; ergN = n1 * n2; } else { if (z1 * n2 < z2 * n1) { var tz = z1; z1 = z2; z2 = tz; var tn = n1; n1 = n2; n2 = tn; } frageTex = bruchTex(z1, n1) + " - " + bruchTex(z2, n2); ergZ = z1 * n2 - z2 * n1; ergN = n1 * n2; } hinweis = "Erweitere auf Hauptnenner " + (n1 * n2); }
@@ -217,9 +221,42 @@ function makeBruchAufgabe(themaId, diff) {
 }
 
 function initEngine() { var s = { skills: {}, diffs: {}, streaksWin: {}, lastSeen: {}, runde: 0, historie: [] }; TIDS.forEach(function (id) { s.skills[id] = 0.5; s.diffs[id] = 1; s.streaksWin[id] = 0; s.lastSeen[id] = 0; }); return s; }
-function waehleThema(e) { var k = THEMEN.map(function (t) { return { id: t.id, score: (1 - e.skills[t.id]) * 1.2 + Math.min(e.runde - (e.lastSeen[t.id] || 0), 5) * 0.3 }; }).sort(function (x, y) { return y.score - x.score; }); var top = k.slice(0, Math.min(3, k.length)); return Math.random() < 0.7 ? top[0].id : top[rnd(0, top.length - 1)].id; }
-function feedback(e, themaId, richtig, dauerSek) { var k = richtig ? (dauerSek < 12 ? 0.06 : 0.04) : -0.08; e.skills[themaId] = Math.max(0, Math.min(1, e.skills[themaId] + k)); e.streaksWin[themaId] = richtig ? e.streaksWin[themaId] + 1 : 0; if (richtig && e.streaksWin[themaId] >= 2) { e.diffs[themaId] = Math.min(5, e.diffs[themaId] + 1); e.streaksWin[themaId] = 0; } if (!richtig && e.diffs[themaId] > 1) e.diffs[themaId]--; e.lastSeen[themaId] = e.runde + 1; e.runde += 1; return e; }
-function tippFuer(e) { var sortiert = THEMEN.slice().sort(function (a, b) { return e.skills[a.id] - e.skills[b.id]; }); return "Schw\\\"achstes Thema: " + sortiert[0].name + " (" + Math.round(e.skills[sortiert[0].id] * 100) + "%) \\cdot St\\\"arkstes: " + sortiert[4].name + " (" + Math.round(e.skills[sortiert[4].id] * 100) + "%)."; }
+function waehleThema(e) {
+  // Gewichtete Auswahl: schwächere Themen kommen häufiger, lange nicht geübte
+  // Themen werden ebenfalls wieder wahrscheinlicher. So bleibt Übung verteilt.
+  var gewichte = THEMEN.map(function (t) {
+    var skill = Math.max(0, Math.min(1, Number(e.skills[t.id]) || 0));
+    var zuletzt = Number(e.lastSeen[t.id]) || 0;
+    var pause = Math.max(0, Math.min(5, e.runde - zuletzt));
+    return { id: t.id, gewicht: 1 + (1 - skill) * 2 + pause * 0.18 };
+  });
+  var summe = gewichte.reduce(function (s, x) { return s + x.gewicht; }, 0);
+  var ziehung = Math.random() * summe;
+  for (var i = 0; i < gewichte.length; i++) {
+    ziehung -= gewichte[i].gewicht;
+    if (ziehung <= 0) return gewichte[i].id;
+  }
+  return gewichte[gewichte.length - 1].id;
+}
+function feedback(e, themaId, richtig, dauerSek) {
+  // Richtigkeit zählt stärker als Geschwindigkeit; Zeit gibt nur einen kleinen Bonus.
+  var delta = richtig ? (dauerSek < 12 ? 0.06 : 0.04) : -0.10;
+  e.skills[themaId] = Math.max(0, Math.min(1, e.skills[themaId] + delta));
+  e.streaksWin[themaId] = richtig ? (e.streaksWin[themaId] || 0) + 1 : 0;
+  // Drei richtige Antworten in Folge erhöhen das Niveau; ein Fehler senkt es.
+  if (richtig && e.streaksWin[themaId] >= 3) {
+    e.diffs[themaId] = Math.min(5, e.diffs[themaId] + 1);
+    e.streaksWin[themaId] = 0;
+  }
+  if (!richtig && e.diffs[themaId] > 1) e.diffs[themaId]--;
+  e.lastSeen[themaId] = e.runde + 1;
+  e.runde += 1;
+  return e;
+}
+function tippFuer(e) {
+  var sortiert = THEMEN.slice().sort(function (a, b) { return e.skills[a.id] - e.skills[b.id]; });
+  return "Schwächstes Thema: " + sortiert[0].name + " (" + Math.round(e.skills[sortiert[0].id] * 100) + "%) · Stärkstes: " + sortiert[4].name + " (" + Math.round(e.skills[sortiert[4].id] * 100) + "%).";
+}
 
 var GADGETS = [ { emoji: "🌍", name: "Erde", punkte: 0 }, { emoji: "🌕", name: "Mond", punkte: 5 }, { emoji: "🚀", name: "Rakete", punkte: 15 }, { emoji: "🛸", name: "Raumstation", punkte: 30 }, { emoji: "👨‍🚀", name: "Astronaut", punkte: 50 }, { emoji: "🌌", name: "Galaxie", punkte: 75 }, { emoji: "👽", name: "Außerirdischer", punkte: 100 } ];
 function titelFuerPunkte(p) { if (p >= 100) return "👽 Bruch-Meister"; if (p >= 75) return "🌌 Galaxis-Entdecker"; if (p >= 50) return "👨‍🚀 Astronaut"; if (p >= 30) return "🛸 Raumstations-Crew"; if (p >= 15) return "🚀 Raketen-Pilot"; if (p >= 5) return "🌕 Mondbesucher"; return "🌍 Weltraum-Novize"; }
@@ -254,7 +291,17 @@ function ladeLokal() { try { return localStorage.getItem(SPEICHER_KEY); } catch 
 function speichere() { try { localStorage.setItem(SPEICHER_KEY, bytesToCode(stateToBytes(engine, score))); return true; } catch (e) { return false; } }
 function ladeLokalInState() { var c = ladeLokal(); if (!c) return; var res = bytesToState(codeToBytes(c)); if (res) { engine = res.engine; score = res.score; } }
 function neueAufgabe() { var tid = waehleThema(engine); aufgabe = makeBruchAufgabe(tid, engine.diffs[tid]); ergebnis = null; auswahl = null; startZeit = Date.now(); render(); }
-function beantworten(wert) { if (ergebnis !== null) return; var num = parseFloat(parseFloat(wert).toFixed(4)); var richtig = Math.abs(num - aufgabe.antwort) < 0.005; auswahl = num; ergebnis = richtig; if (richtig) score++; feedback(engine, aufgabe.themaId, richtig, (Date.now() - startZeit) / 1000); speichere(); lmsSync(); render(); }
+function beantworten(wert) {
+  if (ergebnis !== null) return;
+  if (wert === null || String(wert).trim() === '' || !Number.isFinite(Number(wert))) {
+    var inp = document.getElementById('eingabeIn');
+    if (inp) { inp.setCustomValidity('Bitte gib eine Zahl ein.'); inp.reportValidity(); inp.addEventListener('input', function () { inp.setCustomValidity(''); }, { once: true }); }
+    return;
+  }
+  var num = parseFloat(Number(wert).toFixed(4));
+  var richtig = Math.abs(num - aufgabe.antwort) < 0.005;
+  auswahl = num;
+  ergebnis = richtig; if (richtig) score++; feedback(engine, aufgabe.themaId, richtig, (Date.now() - startZeit) / 1000); speichere(); lmsSync(); render(); }
 function weiter() { neueAufgabe(); }
 function setModus(m) { modus = m; render(); }
 function zuruecksetzen() { try { localStorage.removeItem(SPEICHER_KEY); } catch (e) {} engine = initEngine(); score = 0; if (lmsAktiv && scormAPI) { scormAPI.LMSSetValue("cmi.suspend_data", ""); scormAPI.LMSCommit(""); } neueAufgabe(); renderStatus(); }
@@ -294,14 +341,15 @@ function renderAufgabe() {
     });
     box.className = "mc"; box.innerHTML = html;
     
-    // ✅ EINMAL KaTeX-Rendering für MC-Buttons (korrigiert)
-    if (typeof katex !== 'undefined') {
-      document.querySelectorAll('.mc button').forEach(function(b) {
+    // Die richtige Antwort ist mit $...$ markiert; Delimiter vor KaTeX entfernen.
+    if (typeof katex !== 'undefined' && katex) {
+      box.querySelectorAll('button').forEach(function (b) {
         var txt = b.textContent.trim();
-        if (txt.includes('\\')) {
+        var match = txt.match(/^\$(.+)\$$/);
+        if (match) {
           try {
-            b.innerHTML = katex.renderToString(txt, { displayMode: false, throwOnError: false });
-          } catch(e) { /* Fallback: Text bleibt */ }
+            b.innerHTML = katex.renderToString(match[1], { displayMode: false, throwOnError: false });
+          } catch (e) { /* Bei Fehler den Text beibehalten. */ }
         }
       });
     }
@@ -315,8 +363,8 @@ function renderAufgabe() {
   var fb = document.getElementById("feedbackBox");
   if (ergebnis !== null) {
     var loesungBruch = aufgabe.bruchStr ? " $" + aufgabe.bruchStr + "$" : " " + aufgabe.antwort;
-    var zusatz = ergebnis && aufgabe.hinweis ? ' 💡 <span class="hinweis">' + aufgabe.hinweis + "</span>" : "";
-    zusatz = zusatz || (!ergebnis && aufgabe.hinweis ? '<br><span class="hinweis">💡 ' + aufgabe.hinweis + "</span>" : "");
+    var zusatz = ergebnis && aufgabe.hinweis ? ' 💡 <span class="hinweis">' + hinweisMitFormeln(aufgabe.hinweis) + "</span>" : "";
+    zusatz = zusatz || (!ergebnis && aufgabe.hinweis ? '<br><span class="hinweis">💡 ' + hinweisMitFormeln(aufgabe.hinweis) + "</span>" : "");
     var fbHtml = '<div class="feedback ' + (ergebnis ? "ok" : "no") + '">' + (ergebnis ? "✅ Richtig!" : "❌ Leider falsch. Richtig wäre" + loesungBruch + ".") + zusatz + '</div><button class="weiter" onclick="weiter()">Nächste Aufgabe →</button>';
     fb.innerHTML = fbHtml;
     // KaTeX im Feedback rendern

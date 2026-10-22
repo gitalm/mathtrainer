@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mathe-Trainer Gym 5 🧮</title>
+<title>Kopfrechen-Trainer – Mathematik 5. Klasse 🧮</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: system-ui, -apple-system, sans-serif; background: #0f172a; color: #f1f5f9; padding: 16px; }
@@ -76,7 +76,7 @@
   <div class="kopf">
     <div>
       <h1>🧮 Mathe-Trainer Gym 5</h1>
-      <div class="sub">Adaptive KI – Rechengesetze, Terme &amp; Kopfrechnen</div>
+      <div class="sub">Adaptiver Kopfrechen-Trainer · Grundrechenarten, Rechengesetze &amp; Terme</div>
     </div>
     <div class="punkte">
       <div class="zahl" id="scoreEl">0</div>
@@ -92,7 +92,7 @@
   </div>
 
   <div class="leiste">
-    <span id="saveStatus">💾 Auto-Save aktiv · mit Strg+S manuell speichern</span>
+    <span id="saveStatus">💾 Automatische Speicherung im Browser · Strg+S speichert zusätzlich</span>
     <button onclick="zuruecksetzen()">Spielstand löschen</button>
   </div>
 
@@ -132,6 +132,12 @@
   </div>
 
   <div class="analyse" id="analyseEl"></div>
+  <div class="sub" style="line-height:1.5;padding:0 2px">
+    So passt sich das Training an: Nach zwei richtigen Antworten in Folge steigt die Stufe des Themas.
+    Bei einer falschen Antwort sinkt sie um eine Stufe. Die Themenauswahl bevorzugt Bereiche mit
+    niedrigerem Übungsindex und länger zurückliegender Übung. Das ist eine einfache Regelsteuerung,
+    keine künstliche Intelligenz.
+  </div>
 </div>
 
 <script>
@@ -143,7 +149,7 @@ var THEMEN = [
   { id: "sub", name: "Subtraktion" },
   { id: "mul", name: "Multiplikation" },
   { id: "div", name: "Division" },
-  { id: "gemischt", name: "Terme &amp; Regeln" }
+  { id: "gemischt", name: "Terme & Regeln" }
 ];
 var TIDS = THEMEN.map(function (t) { return t.id; });
 var SPEICHER_KEY = "mathe-trainer-gym5";
@@ -187,17 +193,18 @@ function makeAufgabe(themaId, diff) {
       prim = [a + b + c + 5, (a + b) * c, a + b + c - 5];
       hinweis = "Erst " + a + " + " + b + " = " + (a+b) + ", dann +" + c;
     } else if (d === 4) {
-      a = rnd(12, 25); b = rnd(8, 20); c = rnd(6, 15);
+      a = rnd(20, 80); b = rnd(10, 60); c = rnd(10, 50);
       frage = "(" + a + " + " + b + ") + " + c; antwort = a + b + c;
-      prim = [a + b, a + b + c + 5, (a + c) + b + 3];
-      hinweis = "Assoziativ: (a+b)+c = a+(b+c) = " + antwort;
+      prim = [a + b, a + b + c + 10, (a + c) + b + 3];
+      hinweis = "Rechne geschickt: " + a + " + " + b + " = " + (a+b) + ", danach + " + c + " = " + antwort;
     } else {
-      a = rnd(15, 40); b = rnd(15, 40);
-      // Geschickt rechnen: 38 + 47 = (38+2) + (47-2) = 40 + 45
-      var shift = rnd(1, 4);
+      a = rnd(100, 900); b = rnd(20, 99);
+      // Zur nächsten Zehnerzahl ergänzen und den gleichen Betrag beim zweiten Summanden abziehen.
+      var shift = (10 - (a % 10)) % 10;
+      if (shift === 0) shift = 10;
       frage = a + " + " + b + " (geschickt rechnen!)"; antwort = a + b;
-      prim = [a + b + 3, a + b - 3, (a + shift) + (b - shift) + 2];
-      hinweis = "Tipp: " + a + " + " + shift + " = " + (a + shift) + " und " + b + " − " + shift + " = " + (b - shift) + " → " + (a + shift) + " + " + (b - shift) + " = " + antwort;
+      prim = [a + b + 10, a + b - 10, a + b + 2];
+      hinweis = "Mache die erste Zahl zur nächsten Zehnerzahl: " + a + " + " + shift + " = " + (a + shift) + "; dafür " + b + " − " + shift + " = " + (b - shift) + ". Dann: " + (a + shift) + " + " + (b - shift) + " = " + antwort;
     }
   } else if (themaId === "sub") {
     if (d === 1) {
@@ -209,21 +216,21 @@ function makeAufgabe(themaId, diff) {
       frage = a + " − " + b; antwort = a - b;
       prim = [a - b + 3, a - b - 3, a / 2];
     } else if (d === 3) {
-      a = rnd(30, 60); b = rnd(8, 20); c = rnd(4, 12);
+      b = rnd(8, 20); c = rnd(4, 12); a = rnd(b + c + 1, 60);
       frage = a + " − " + b + " − " + c; antwort = a - b - c;
       prim = [a - (b + c) + 2, a - b - c - 3, a - b + c];
       hinweis = "Erst " + b + " + " + c + " = " + (b + c) + ", dann " + a + " − " + (b + c) + " = " + antwort;
     } else if (d === 4) {
-      a = rnd(15, 40); b = rnd(4, 15); c = rnd(2, 10);
+      a = rnd(50, 99); b = rnd(10, Math.min(35, a - 12)); c = rnd(2, Math.min(9, a - b - 1));
       frage = "(" + a + " − " + b + ") − " + c; antwort = a - b - c;
       prim = [a - b, a - b - c + 4, (a - b) * 2];
+      hinweis = "Ziehe zuerst " + b + " und danach " + c + " ab.";
     } else {
-      a = rnd(20, 70); b = rnd(5, a - 5);
-      var erg = rnd(3, Math.min(15, a - b - 2));
+      b = rnd(100, 700); var erg = rnd(20, Math.min(200, 999 - b));
       frage = "☐ − " + b + " = " + erg + "  →  ☐ = ?";
       antwort = b + erg;
       prim = [Math.abs(b - erg), b + erg + 3, b * erg];
-      hinweis = "Umkehrung: ☐ = " + b + " + " + erg;
+      hinweis = "Umkehraufgabe: Addiere " + b + " + " + erg + " = " + antwort;
     }
   } else if (themaId === "mul") {
     if (d === 1) {
@@ -265,17 +272,18 @@ function makeAufgabe(themaId, diff) {
       hinweis = b + " · " + antwort + " = " + a;
     } else if (d === 3) {
       antwort = rnd(5, 12); b = rnd(3, 7); a = antwort * b;
-      frage = "(☐ · " + b + ") ÷ " + b + " = ?"; antwort = a / b;
-      prim = [a, antwort + 2, b];
-      hinweis = "Malnehmen und durch dieselbe Zahl teilen hebt sich auf → " + antwort;
+      frage = "☐ ÷ " + b + " = " + antwort + "  →  ☐ = ?";
+      antwort = a;
+      prim = [a + b, a - b, a + antwort];
+      hinweis = "Umkehraufgabe: " + antwort + " · " + b + " = " + a;
     } else if (d === 4) {
       antwort = rnd(5, 15); b = rnd(3, 8); a = antwort * b;
       frage = a + " ÷ " + b; antwort = a / b;
       prim = [antwort + 2, antwort - 2, b * 2];
     } else {
-      a = rnd(24, 96); b = rnd(2, 9);
-      while (a % b !== 0) { a = rnd(24, 96); }
-      frage = a + " ÷ " + b + " (schrittweise)";
+      a = rnd(120, 999); b = rnd(2, 9);
+      while (a % b !== 0) { a = rnd(120, 999); }
+      frage = a + " ÷ " + b + " (geschickt rechnen)";
       antwort = a / b;
       prim = [Math.floor(a / b) + 2, Math.floor(a / b) - 2, a / (b * 2)];
       var hilfe = "";
@@ -308,6 +316,8 @@ function makeAufgabe(themaId, diff) {
       hinweis = "Distributiv: " + a + "·" + b + " + " + a + "·" + c + " = " + a + "·(" + b + "+" + c + ")";
     } else if (d === 4) {
       a = rnd(3, 8); b = rnd(2, 6); c = rnd(2, 6);
+      // In Klasse 5 bleiben die Ergebnisse hier nichtnegativ.
+      if (b < c) { var tausch = b; b = c; c = tausch; }
       frage = a + " · " + b + " − " + a + " · " + c;
       antwort = a * b - a * c;
       prim = [a * (b - c) + 3, a * (b + c), (a * b) - c];
@@ -357,8 +367,8 @@ function feedback(e, themaId, richtig, dauerSek) {
 }
 function tippFuer(e) {
   var sortiert = THEMEN.slice().sort(function (a, b) { return e.skills[a.id] - e.skills[b.id]; });
-  return "Schwächstes Thema: " + sortiert[0].name + " (" + Math.round(e.skills[sortiert[0].id] * 100) + "%) · Stärkstes: " + sortiert[4].name +
-    " (" + Math.round(e.skills[sortiert[4].id] * 100) + "%). Nächste Aufgaben fokussieren " + sortiert[0].name + ".";
+  return "Bisherige Übungseinschätzung: " + sortiert[0].name + " braucht am ehesten weitere Übung; " +
+    sortiert[4].name + " läuft derzeit vergleichsweise sicher. Die Werte sind eine Orientierung, keine Note.";
 }
 
 var GADGETS = [
@@ -573,8 +583,12 @@ function neueAufgabe() {
 }
 function beantworten(wert) {
   if (ergebnis !== null) return;
-  var richtig = Number(wert) === aufgabe.antwort;
-  auswahl = Number(wert); ergebnis = richtig;
+  // Leere Felder und Nicht-Ganzzahlen dürfen nicht versehentlich als 0 gelten.
+  if (typeof wert === "string" && wert.trim() === "") return;
+  var zahl = Number(wert);
+  if (!Number.isFinite(zahl) || !Number.isInteger(zahl)) return;
+  var richtig = zahl === aufgabe.antwort;
+  auswahl = zahl; ergebnis = richtig;
   if (richtig) score++;
   feedback(engine, aufgabe.themaId, richtig, (Date.now() - startZeit) / 1000);
   speichere(); lmsSync();
@@ -612,11 +626,11 @@ function renderSkills() {
   THEMEN.forEach(function (t) {
     var p = engine.skills[t.id];
     var farbe = p > 0.7 ? "#10b981" : p > 0.4 ? "#fbbf24" : "#fb7185";
-    html += '<div class="skill"><div class="name">' + t.name + '</div><div class="bar"><div style="width:' +
-      (p * 100) + '%;background:' + farbe + '"></div></div><div class="st">St. ' + engine.diffs[t.id] + "</div></div>";
+    html += '<div class="skill" title="Übungsindex: ' + Math.round(p * 100) + ' · Schwierigkeitsstufe ' + engine.diffs[t.id] + ' von 5"><div class="name">' + t.name + '</div><div class="bar"><div style="width:' +
+      (p * 100) + '%;background:' + farbe + '"></div></div><div class="st">Stufe ' + engine.diffs[t.id] + '/5</div></div>';
   });
   document.getElementById("skills").innerHTML = html;
-  document.getElementById("analyseEl").innerHTML = "<b>🤖 Trainer-Analyse:</b> " + tippFuer(engine);
+  document.getElementById("analyseEl").innerHTML = "<b>📘 Lernhinweis (regelbasiert):</b> " + tippFuer(engine);
 }
 function renderAufgabe() {
   var thema = THEMEN.filter(function (t) { return t.id === aufgabe.themaId; })[0];
@@ -628,7 +642,10 @@ function renderAufgabe() {
   if (modus === "mc") {
     var opt = [aufgabe.antwort].concat(aufgabe.distr);
     while (opt.length < 4) { var x = aufgabe.antwort + (opt.length * 2); if (opt.indexOf(x) === -1 && x >= 0) opt.push(x); else break; }
-    opt.sort(function () { return Math.random() - 0.5; });
+    // Gleichmäßiges Mischen der Antwortoptionen.
+    for (var oi = opt.length - 1; oi > 0; oi--) {
+      var oj = rnd(0, oi), tmp = opt[oi]; opt[oi] = opt[oj]; opt[oj] = tmp;
+    }
     opt.forEach(function (o) {
       var cls = "";
       if (ergebnis !== null) {
