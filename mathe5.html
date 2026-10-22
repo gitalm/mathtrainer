@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mathe-Trainer Gym 5 🧮</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: system-ui, -apple-system, sans-serif; background: #0f172a; color: #f1f5f9; padding: 16px; }
+  .wrap { max-width: 720px; margin: 0 auto; display: flex; flex-direction: column; gap: 12px; }
+  .kopf { display: flex; justify-content: space-between; align-items: flex-start; }
+  h1 { font-size: 22px; }
+  .sub { font-size: 13px; color: #94a3b8; }
+  .punkte { text-align: right; }
+  .punkte .zahl { font-size: 28px; font-weight: 800; color: #38bdf8; }
+  .punkte .label { font-size: 11px; color: #94a3b8; }
+  .skills { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+  .skill { background: #1e293b; border: 1px solid #334155; border-radius: 10px; padding: 8px 4px; text-align: center; }
+  .skill .name { font-size: 11px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .skill .bar { height: 6px; background: #334155; border-radius: 99px; overflow: hidden; margin: 5px 6px 3px; }
+  .skill .bar > div { height: 100%; border-radius: 99px; }
+  .skill .st { font-size: 10px; color: #94a3b8; }
+  .gadgets { background: #1e293b; border: 1px solid #334155; border-radius: 10px; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; }
+  .gadget-reihe { display: flex; gap: 6px; }
+  .gadget { font-size: 22px; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: #334155; transition: .3s; }
+  .gadget.aktiv { background: #1e3a5f; box-shadow: 0 0 10px #38bdf888; animation: glow 1.5s ease-in-out infinite alternate; }
+  .gadget.leer { font-size: 14px; color: #475569; }
+  @keyframes glow { from { box-shadow: 0 0 5px #38bdf844; } to { box-shadow: 0 0 15px #38bdf8aa; } }
+  .gadget-titel { font-size: 13px; font-weight: 600; color: #38bdf8; white-space: nowrap; }
+  .leiste { background: #1e293b; border: 1px solid #334155; border-radius: 10px; padding: 8px 14px; font-size: 12px; color: #94a3b8; display: flex; justify-content: space-between; align-items: center; }
+  .leiste button, .panel-head button { background: none; border: none; color: #f87171; font-size: 12px; font-weight: 600; cursor: pointer; text-decoration: underline; }
+  .card { background: #1e293b; border: 1px solid #334155; border-radius: 16px; padding: 22px; box-shadow: 0 1px 2px rgba(0,0,0,.04); }
+  .zeile { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+  .badge { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: #38bdf8; background: #0f172a; padding: 4px 10px; border-radius: 6px; }
+  .tabs { display: flex; gap: 2px; background: #334155; border-radius: 8px; padding: 3px; }
+  .tabs button { border: none; background: none; font-size: 12px; padding: 5px 10px; border-radius: 6px; color: #94a3b8; cursor: pointer; }
+  .tabs button.aktiv { background: #1e293b; color: #f1f5f9; font-weight: 600; box-shadow: 0 1px 2px rgba(0,0,0,.06); }
+  .frage { text-align: center; font-size: 32px; font-weight: 700; padding: 24px 0; letter-spacing: .03em; line-height: 1.4; }
+  .mc { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .mc button { font-size: 20px; font-weight: 600; padding: 14px; border-radius: 12px; border: 2px solid #334155; background: #0f172a; color: #f1f5f9; cursor: pointer; transition: background .15s; }
+  .mc button:hover:not(:disabled) { background: #1e3a5f; }
+  .mc button.richtig { background: #064e3b; border-color: #34d399; }
+  .mc button.falsch { background: #7f1d1d; border-color: #fb7185; }
+  .mc button.gedimmt { opacity: .55; }
+  .eingabe { display: flex; gap: 8px; justify-content: center; }
+  .eingabe input { width: 140px; text-align: center; font-size: 22px; font-weight: 600; border: 2px solid #334155; border-radius: 12px; padding: 10px; background: #0f172a; color: #f1f5f9; }
+  .eingabe input:focus { outline: none; border-color: #38bdf8; }
+  .eingabe button, .weiter { background: #38bdf8; color: #0f172a; font-weight: 600; border: none; border-radius: 12px; padding: 10px 22px; font-size: 14px; cursor: pointer; }
+  .eingabe button:disabled { opacity: .4; cursor: default; }
+  .feedback { margin-top: 16px; border-radius: 12px; padding: 14px; font-weight: 500; font-size: 15px; }
+  .feedback.ok { background: #064e3b; color: #6ee7b7; }
+  .feedback.no { background: #7f1d1d; color: #fca5a5; }
+  .feedback .hinweis { color: #fbbf24; font-weight: 700; }
+  .weiter { width: 100%; margin-top: 10px; background: #38bdf8; color: #0f172a; }
+  .weiter:hover { background: #0ea5e9; }
+  .analyse { background: #1e3a5f; border: 1px solid #334155; border-radius: 14px; padding: 14px; font-size: 13px; color: #7dd3fc; }
+  .panel { background: #1e293b; border: 1px solid #334155; border-radius: 16px; padding: 14px; }
+  .panel-head { width: 100%; display: flex; justify-content: space-between; align-items: center; font-weight: 600; font-size: 14px; background: none; border: none; cursor: pointer; color: #f1f5f9; }
+  .panel-body { display: none; margin-top: 14px; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .panel-body.offen { display: grid; }
+  .panel-body h4 { font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: #94a3b8; margin-bottom: 6px; }
+  .qrbox { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .qrbox svg { width: 170px; height: 170px; border: 1px solid #334155; border-radius: 8px; background: white; }
+  .qrbox small { font-size: 10px; color: #94a3b8; }
+  .codefeld { width: 100%; font-family: monospace; font-size: 11px; border: 1px solid #334155; border-radius: 8px; padding: 7px; background: #0f172a; color: #f1f5f9; resize: none; }
+  .copy { background: #38bdf8; color: #0f172a; border: none; border-radius: 8px; padding: 7px 14px; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+  .laden { width: 100%; background: #38bdf8; color: #0f172a; border: none; border-radius: 10px; padding: 9px; font-size: 13px; font-weight: 600; cursor: pointer; margin-top: 8px; }
+  .laden:hover { background: #0ea5e9; }
+  .msg { font-size: 12px; margin-top: 8px; }
+  .msg.ok { color: #6ee7b7; } .msg.no { color: #fca5a5; }
+  @media (max-width: 640px) { .skills { grid-template-columns: repeat(5, 1fr); gap: 4px; } .panel-body { grid-template-columns: 1fr; } .frage { font-size: 24px; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="kopf">
+    <div>
+      <h1>🧮 Mathe-Trainer Gym 5</h1>
+      <div class="sub">Adaptive KI – Rechengesetze, Terme &amp; Kopfrechnen</div>
+    </div>
+    <div class="punkte">
+      <div class="zahl" id="scoreEl">0</div>
+      <div class="label" id="rundeEl">Punkte · Runde 0</div>
+    </div>
+  </div>
+
+  <div class="skills" id="skills"></div>
+
+  <div class="gadgets">
+    <span class="gadget-titel" id="gadgetTitel">🌍 Weltraum-Novize</span>
+    <div class="gadget-reihe" id="gadgetReihe"></div>
+  </div>
+
+  <div class="leiste">
+    <span id="saveStatus">💾 Auto-Save aktiv · mit Strg+S manuell speichern</span>
+    <button onclick="zuruecksetzen()">Spielstand löschen</button>
+  </div>
+
+  <div class="panel">
+    <button class="panel-head" onclick="togglePanel()">
+      <span>📱 Auf anderem Gerät weitermachen (QR / Code)</span><span id="panelPfeil">▸</span>
+    </button>
+    <div class="panel-body" id="panelBody">
+      <div>
+        <h4>Spielstand exportieren</h4>
+        <div class="qrbox"><div id="qr"></div><small>QR scannen → Website öffnet sich mit deinem Spielstand</small></div>
+        <div style="display:flex;gap:6px;margin-top:8px">
+          <textarea class="codefeld" id="exportCode" rows="2" readonly></textarea>
+          <button class="copy" onclick="codeKopieren()">Kopieren</button>
+        </div>
+      </div>
+      <div>
+        <h4>Spielstand laden</h4>
+        <textarea class="codefeld" id="importCode" rows="3" placeholder="Code hier einfügen (vom QR-Scan oder kopiert)…"></textarea>
+        <button class="laden" onclick="codeLaden()">Spielstand übernehmen</button>
+        <div class="msg" id="importMsg"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="zeile">
+      <span class="badge" id="themaBadge">ADDITION</span>
+      <div class="tabs">
+        <button id="tabMC" onclick="setModus('mc')" class="aktiv">Multiple Choice</button>
+        <button id="tabIN" onclick="setModus('input')">Freie Eingabe</button>
+      </div>
+    </div>
+    <div class="frage" id="frageEl"></div>
+    <div id="antwortBox"></div>
+    <div id="feedbackBox"></div>
+  </div>
+
+  <div class="analyse" id="analyseEl"></div>
+</div>
+
+<script>
+/* ============================================================
+   Mathe-Engine: Gymnasium 5 – Rechengesetze, Terme, Kopfrechnen
+   ============================================================ */
+var THEMEN = [
+  { id: "add", name: "Addition" },
+  { id: "sub", name: "Subtraktion" },
+  { id: "mul", name: "Multiplikation" },
+  { id: "div", name: "Division" },
+  { id: "gemischt", name: "Terme &amp; Regeln" }
+];
+var TIDS = THEMEN.map(function (t) { return t.id; });
+var SPEICHER_KEY = "mathe-trainer-gym5";
+
+function rnd(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+
+function erzeugeDistraktoren(antwort, prim) {
+  var uniq = [];
+  prim.forEach(function(f) {
+    if (f !== antwort && uniq.indexOf(f) === -1 && f >= 0) uniq.push(f);
+  });
+  var fallbacks = [antwort + 1, antwort - 1, antwort + 2, antwort - 2, antwort + 10, antwort - 10];
+  for (var i = 0; i < fallbacks.length && uniq.length < 3; i++) {
+    var v = fallbacks[i];
+    if (v !== antwort && uniq.indexOf(v) === -1 && v >= 0) uniq.push(v);
+  }
+  for (var delta = 1; uniq.length < 3 && delta < 30; delta++) {
+    [antwort + delta, antwort - delta].forEach(function(v) {
+      if (uniq.length < 3 && v !== antwort && uniq.indexOf(v) === -1 && v >= 0) uniq.push(v);
+    });
+  }
+  return uniq.slice(0, 3);
+}
+
+function makeAufgabe(themaId, diff) {
+  var d = Math.max(1, Math.min(5, diff));
+  var a, b, c, d2, frage, antwort, prim = [], hinweis = "";
+
+  if (themaId === "add") {
+    if (d === 1) {
+      a = rnd(10, 30); b = rnd(10, 30);
+      frage = a + " + " + b; antwort = a + b;
+      prim = [a + b + 2, a + b - 2, a + b + 10];
+    } else if (d === 2) {
+      a = rnd(15, 40); b = rnd(15, 40);
+      frage = a + " + " + b; antwort = a + b;
+      prim = [a + b + 5, a + b - 5, (a + 10) + b];
+    } else if (d === 3) {
+      a = rnd(10, 30); b = rnd(10, 30); c = rnd(5, 15);
+      frage = a + " + " + b + " + " + c; antwort = a + b + c;
+      prim = [a + b + c + 5, (a + b) * c, a + b + c - 5];
+      hinweis = "Erst " + a + " + " + b + " = " + (a+b) + ", dann +" + c;
+    } else if (d === 4) {
+      a = rnd(12, 25); b = rnd(8, 20); c = rnd(6, 15);
+      frage = "(" + a + " + " + b + ") + " + c; antwort = a + b + c;
+      prim = [a + b, a + b + c + 5, (a + c) + b + 3];
+      hinweis = "Assoziativ: (a+b)+c = a+(b+c) = " + antwort;
+    } else {
+      a = rnd(15, 40); b = rnd(15, 40);
+      // Geschickt rechnen: 38 + 47 = (38+2) + (47-2) = 40 + 45
+      var shift = rnd(1, 4);
+      frage = a + " + " + b + " (geschickt rechnen!)"; antwort = a + b;
+      prim = [a + b + 3, a + b - 3, (a + shift) + (b - shift) + 2];
+      hinweis = "Tipp: " + a + " + " + shift + " = " + (a + shift) + " und " + b + " − " + shift + " = " + (b - shift) + " → " + (a + shift) + " + " + (b - shift) + " = " + antwort;
+    }
+  } else if (themaId === "sub") {
+    if (d === 1) {
+      a = rnd(15, 40); b = rnd(5, 14);
+      frage = a + " − " + b; antwort = a - b;
+      prim = [a - b + 1, a - b - 1, b - a];
+    } else if (d === 2) {
+      a = rnd(30, 70); b = rnd(10, 25);
+      frage = a + " − " + b; antwort = a - b;
+      prim = [a - b + 3, a - b - 3, a / 2];
+    } else if (d === 3) {
+      a = rnd(30, 60); b = rnd(8, 20); c = rnd(4, 12);
+      frage = a + " − " + b + " − " + c; antwort = a - b - c;
+      prim = [a - (b + c) + 2, a - b - c - 3, a - b + c];
+      hinweis = "Erst " + b + " + " + c + " = " + (b + c) + ", dann " + a + " − " + (b + c) + " = " + antwort;
+    } else if (d === 4) {
+      a = rnd(15, 40); b = rnd(4, 15); c = rnd(2, 10);
+      frage = "(" + a + " − " + b + ") − " + c; antwort = a - b - c;
+      prim = [a - b, a - b - c + 4, (a - b) * 2];
+    } else {
+      a = rnd(20, 70); b = rnd(5, a - 5);
+      var erg = rnd(3, Math.min(15, a - b - 2));
+      frage = "☐ − " + b + " = " + erg + "  →  ☐ = ?";
+      antwort = b + erg;
+      prim = [Math.abs(b - erg), b + erg + 3, b * erg];
+      hinweis = "Umkehrung: ☐ = " + b + " + " + erg;
+    }
+  } else if (themaId === "mul") {
+    if (d === 1) {
+      a = rnd(3, 9); b = rnd(3, 9);
+      frage = a + " · " + b; antwort = a * b;
+      prim = [(a-1)*b, a*(b-1), a*b + a];
+    } else if (d === 2) {
+      a = rnd(6, 12); b = rnd(3, 9);
+      frage = a + " · " + b; antwort = a * b;
+      prim = [(a+1)*b, a*(b+1), a*b + 5];
+    } else if (d === 3) {
+      a = rnd(4, 9); b = rnd(3, 7); c = rnd(2, 5);
+      frage = a + " · " + b + " + " + a + " · " + c;
+      antwort = a * b + a * c;
+      prim = [a * (b + c) + 5, a * (b * c), (a + a) * (b + c)];
+      hinweis = "Distributiv: " + a + " · " + b + " + " + a + " · " + c + " = " + a + " · (" + b + " + " + c + ") = " + a + " · " + (b+c) + " = " + antwort;
+    } else if (d === 4) {
+      a = rnd(4, 10); b = rnd(3, 6); c = rnd(2, 5);
+      frage = a + " · (" + b + " + " + c + ")";
+      antwort = a * (b + c);
+      prim = [a * b + c, a * b + a + c, a * (b + c) + 5];
+      hinweis = "Ausmultiplizieren: " + a + "·" + b + " + " + a + "·" + c + " = " + (a*b) + " + " + (a*c) + " = " + antwort;
+    } else {
+      a = rnd(5, 12); b = rnd(2, 6); c = rnd(2, 5);
+      frage = a + " · " + b + " + " + a + " · " + c + " (Klammere " + a + " aus)";
+      antwort = a * (b + c);
+      prim = [a * b * c, a * b + a * c + a, a * (b + c) + 6];
+      hinweis = a + " · (" + b + " + " + c + ") = " + antwort;
+    }
+  } else if (themaId === "div") {
+    if (d === 1) {
+      antwort = rnd(3, 12); b = rnd(3, 9); a = antwort * b;
+      frage = a + " ÷ " + b; antwort = a / b;
+      prim = [antwort + 1, antwort - 1, b];
+    } else if (d === 2) {
+      antwort = rnd(4, 14); b = rnd(3, 9); a = antwort * b;
+      frage = a + " ÷ " + b; antwort = a / b;
+      prim = [antwort + 2, antwort - 2, b + antwort];
+      hinweis = b + " · " + antwort + " = " + a;
+    } else if (d === 3) {
+      antwort = rnd(5, 12); b = rnd(3, 7); a = antwort * b;
+      frage = "(☐ · " + b + ") ÷ " + b + " = ?"; antwort = a / b;
+      prim = [a, antwort + 2, b];
+      hinweis = "Malnehmen und durch dieselbe Zahl teilen hebt sich auf → " + antwort;
+    } else if (d === 4) {
+      antwort = rnd(5, 15); b = rnd(3, 8); a = antwort * b;
+      frage = a + " ÷ " + b; antwort = a / b;
+      prim = [antwort + 2, antwort - 2, b * 2];
+    } else {
+      a = rnd(24, 96); b = rnd(2, 9);
+      while (a % b !== 0) { a = rnd(24, 96); }
+      frage = a + " ÷ " + b + " (schrittweise)";
+      antwort = a / b;
+      prim = [Math.floor(a / b) + 2, Math.floor(a / b) - 2, a / (b * 2)];
+      var hilfe = "";
+      if (b === 2) hilfe = "Gerade Zahl → /2 = " + antwort;
+      else if (b === 3) hilfe = "Quersumme " + (a.toString().split('').reduce(function(s, d) { return s + parseInt(d); }, 0)) + " ist durch 3 teilbar";
+      else if (b === 5) hilfe = "Endet auf 0 oder 5 → " + antwort;
+      else if (b === 9) hilfe = "Quersumme durch 9 teilbar → " + antwort;
+      else hilfe = b + " · " + antwort + " = " + a;
+      hinweis = hilfe;
+    }
+  } else {
+    // Terme & Regeln: Punkt vor Strich, Distributiv, Klammern
+    if (d === 1) {
+      a = rnd(2, 6); b = rnd(2, 6); c = rnd(2, 6);
+      frage = a + " + " + b + " · " + c;
+      antwort = a + b * c;
+      prim = [(a + b) * c, a * b + c, a + b + c];
+      hinweis = "Punkt vor Strich! " + b + " · " + c + " = " + (b*c) + ", dann " + a + " + " + (b*c);
+    } else if (d === 2) {
+      a = rnd(2, 6); b = rnd(2, 6); c = rnd(2, 6);
+      frage = "(" + a + " + " + b + ") · " + c;
+      antwort = (a + b) * c;
+      prim = [a + b * c, (a + b) + c, a * b * c];
+      hinweis = "Klammer zuerst! (" + (a+b) + ") · " + c + " = " + antwort;
+    } else if (d === 3) {
+      a = rnd(3, 8); b = rnd(2, 7); c = rnd(2, 5);
+      frage = a + " · " + b + " + " + a + " · " + c;
+      antwort = a * b + a * c;
+      prim = [a * (b + c) + 5, a * (b * c), (a + a) * (b + c)];
+      hinweis = "Distributiv: " + a + "·" + b + " + " + a + "·" + c + " = " + a + "·(" + b + "+" + c + ")";
+    } else if (d === 4) {
+      a = rnd(3, 8); b = rnd(2, 6); c = rnd(2, 6);
+      frage = a + " · " + b + " − " + a + " · " + c;
+      antwort = a * b - a * c;
+      prim = [a * (b - c) + 3, a * (b + c), (a * b) - c];
+      hinweis = "Distributiv mit Minus: " + a + "·" + b + " − " + a + "·" + c + " = " + a + "·(" + b + "−" + c + ")";
+    } else {
+      a = rnd(2, 5); b = rnd(2, 5); c = rnd(2, 5); d2 = rnd(2, 5);
+      frage = a + " · " + b + " + " + c + " · " + d2;
+      antwort = a * b + c * d2;
+      prim = [(a + b) * (c + d2), a * b * c * d2, a * b + c + d2];
+      hinweis = "Punkt vor Strich: " + a + "·" + b + "=" + (a*b) + " und " + c + "·" + d2 + "=" + (c*d2) + ", dann " + (a*b) + "+" + (c*d2) + "=" + antwort;
+    }
+  }
+
+  var distr = erzeugeDistraktoren(antwort, prim);
+
+  return {
+    themaId: themaId,
+    frage: frage,
+    antwort: antwort,
+    distr: distr,
+    diff: d,
+    hinweis: hinweis
+  };
+}
+
+function initEngine() {
+  var s = { skills: {}, diffs: {}, streaksWin: {}, lastSeen: {}, runde: 0, historie: [] };
+  TIDS.forEach(function (id) { s.skills[id] = 0.5; s.diffs[id] = 1; s.streaksWin[id] = 0; s.lastSeen[id] = 0; });
+  return s;
+}
+function waehleThema(e) {
+  var k = THEMEN.map(function (t) {
+    return { id: t.id, score: (1 - e.skills[t.id]) * 1.2 + Math.min(e.runde - (e.lastSeen[t.id] || 0), 5) * 0.3 };
+  }).sort(function (x, y) { return y.score - x.score; });
+  var top = k.slice(0, Math.min(3, k.length));
+  return Math.random() < 0.7 ? top[0].id : top[rnd(0, top.length - 1)].id;
+}
+function feedback(e, themaId, richtig, dauerSek) {
+  var k = richtig ? (dauerSek < 8 ? 0.06 : 0.04) : -0.08;
+  e.skills[themaId] = Math.max(0, Math.min(1, e.skills[themaId] + k));
+  e.streaksWin[themaId] = richtig ? e.streaksWin[themaId] + 1 : 0;
+  if (richtig && e.streaksWin[themaId] >= 2) { e.diffs[themaId] = Math.min(5, e.diffs[themaId] + 1); e.streaksWin[themaId] = 0; }
+  if (!richtig && e.diffs[themaId] > 1) e.diffs[themaId]--;
+  e.lastSeen[themaId] = e.runde + 1;
+  e.runde += 1;
+  return e;
+}
+function tippFuer(e) {
+  var sortiert = THEMEN.slice().sort(function (a, b) { return e.skills[a.id] - e.skills[b.id]; });
+  return "Schwächstes Thema: " + sortiert[0].name + " (" + Math.round(e.skills[sortiert[0].id] * 100) + "%) · Stärkstes: " + sortiert[4].name +
+    " (" + Math.round(e.skills[sortiert[4].id] * 100) + "%). Nächste Aufgaben fokussieren " + sortiert[0].name + ".";
+}
+
+var GADGETS = [
+  { emoji: "🌍", name: "Erde", punkte: 0 },
+  { emoji: "🌕", name: "Mond", punkte: 5 },
+  { emoji: "🚀", name: "Rakete", punkte: 15 },
+  { emoji: "🛸", name: "Raumstation", punkte: 30 },
+  { emoji: "👨‍🚀", name: "Astronaut", punkte: 50 },
+  { emoji: "🌌", name: "Galaxie", punkte: 75 },
+  { emoji: "👽", name: "Außerirdischer", punkte: 100 }
+];
+
+function titelFuerPunkte(p) {
+  if (p >= 100) return "👽 Mathe-Genie";
+  if (p >= 75) return "🌌 Galaxis-Entdecker";
+  if (p >= 50) return "👨‍🚀 Astronaut";
+  if (p >= 30) return "🛸 Raumstations-Crew";
+  if (p >= 15) return "🚀 Raketen-Pilot";
+  if (p >= 5) return "🌕 Mondbesucher";
+  return "🌍 Weltraum-Novize";
+}
+
+function renderGadgets(score) {
+  var reihe = document.getElementById("gadgetReihe");
+  document.getElementById("gadgetTitel").textContent = titelFuerPunkte(score);
+  var html = "";
+  GADGETS.forEach(function(g) {
+    if (score >= g.punkte) {
+      html += '<div class="gadget aktiv" title="' + g.name + ' (' + g.punkte + ' Pkt)">' + g.emoji + '</div>';
+    } else {
+      html += '<div class="gadget leer" title="🔒 bei ' + g.punkte + ' Punkten">🔒</div>';
+    }
+  });
+  reihe.innerHTML = html;
+}
+
+/* ============================================================
+   QR / Codec / SCORM / App-Logik (unverändert)
+   ============================================================ */
+var QEXP = new Uint8Array(512), QLOG = new Uint8Array(256);
+(function () { var x = 1; for (var i = 0; i < 255; i++) { QEXP[i] = x; QLOG[x] = i; x <<= 1; if (x & 0x100) x ^= 0x11d; } for (var j = 255; j < 512; j++) QEXP[j] = QEXP[j - 255]; })();
+function qmul(a, b) { return (a && b) ? QEXP[QLOG[a] + QLOG[b]] : 0; }
+function qrGenPoly(n) { var g = [1]; for (var i = 0; i < n; i++) { var ng = new Array(g.length + 1).fill(0); for (var j = 0; j < g.length; j++) { ng[j] ^= g[j]; ng[j + 1] ^= qmul(g[j], QEXP[i]); } g = ng; } return g; }
+function qrRs(data, n) { var g = qrGenPoly(n), res = new Array(n).fill(0); for (var i = 0; i < data.length; i++) { var f = data[i] ^ res[0]; res.shift(); res.push(0); if (f) for (var k = 0; k < n; k++) res[k] ^= qmul(g[k + 1], f); } return res; }
+function qrEncodeData(bytes, v) {
+  var cap = [0, 19, 34, 55, 80, 108][v], ecN = [0, 7, 10, 15, 20, 26][v], bits = [];
+  function push(x, l) { for (var i = l - 1; i >= 0; i--) bits.push((x >> i) & 1); }
+  push(4, 4); push(bytes.length, 8);
+  for (var i = 0; i < bytes.length; i++) push(bytes[i], 8);
+  var max = cap * 8;
+  for (var j = 0; j < 4 && bits.length < max; j++) bits.push(0);
+  while (bits.length % 8) bits.push(0);
+  var out = []; for (var k = 0; k < bits.length; k += 8) { var x = 0; for (var m = 0; m < 8; m++) x = (x << 1) | bits[k + m]; out.push(x); }
+  var pads = [0xEC, 0x11], pi = 0;
+  while (out.length < cap) out.push(pads[pi++ % 2]);
+  return out.concat(qrRs(out, ecN));
+}
+function qrBuildMatrix(v, cw) {
+  var n = v * 4 + 17, m = [], y, x, i, r, c;
+  for (y = 0; y < n; y++) { m.push(new Array(n).fill(null)); }
+  function set(yy, xx, val) { m[yy][xx] = val; }
+  function finder(fy, fx) {
+    for (r = -1; r <= 7; r++) for (c = -1; c <= 7; c++) {
+      var yy = fy + r, xx = fx + c; if (yy < 0 || yy >= n || xx < 0 || xx >= n) continue;
+      var d = (r >= 0 && r <= 6 && (c === 0 || c === 6)) || (c >= 0 && c <= 6 && (r === 0 || r === 6)) || (r >= 2 && r <= 4 && c >= 2 && c <= 4);
+      set(yy, xx, d ? 1 : 0);
+    }
+  }
+  finder(0, 0); finder(0, n - 7); finder(n - 7, 0);
+  for (i = 8; i < n - 8; i++) { var t = i % 2 === 0 ? 1 : 0; if (m[6][i] === null) set(6, i, t); if (m[i][6] === null) set(i, 6, t); }
+  if (v >= 2) { var ap = 4 * v + 10; for (r = -2; r <= 2; r++) for (c = -2; c <= 2; c++) set(ap + r, ap + c, Math.max(Math.abs(r), Math.abs(c)) !== 1 ? 1 : 0); }
+  var dataBits = (0b01 << 3) | 0, d2 = dataBits << 10;
+  while (d2.toString(2).length >= 11) d2 ^= 0b10100110111 << (d2.toString(2).length - 11);
+  var fmt = ((dataBits << 10) | d2) ^ 0b101010000010010;
+  for (i = 0; i < 15; i++) {
+    var mod = (fmt >> i) & 1;
+    if (i < 6) set(i, 8, mod); else if (i < 8) set(i + 1, 8, mod); else set(n - 15 + i, 8, mod);
+    if (i < 8) set(8, n - i - 1, mod); else if (i < 9) set(8, 15 - i, mod); else set(8, 14 - i, mod);
+  }
+  set(n - 8, 8, 1);
+  var idx = 0, up = true;
+  for (var col = n - 1; col > 0; col -= 2) {
+    if (col === 6) col--;
+    for (i = 0; i < n; i++) {
+      var yy2 = up ? n - 1 - i : i;
+      for (var cc = 0; cc < 2; cc++) {
+        var xx2 = col - cc; if (m[yy2][xx2] !== null) continue;
+        var val = 0;
+        if (idx < cw.length * 8) { val = (cw[idx >> 3] >> (7 - (idx & 7))) & 1; idx++; }
+        if ((xx2 + yy2) % 2 === 0) val ^= 1;
+        set(yy2, xx2, val);
+      }
+    }
+    up = !up;
+  }
+  for (y = 0; y < n; y++) for (x = 0; x < n; x++) if (m[y][x] === null) m[y][x] = 0;
+  return m;
+}
+function qrMake(bytes) {
+  for (var v = 1; v <= 5; v++) if (bytes.length + 2 <= [0, 19, 34, 55, 80, 108][v]) return qrBuildMatrix(v, qrEncodeData(bytes, v));
+  return null;
+}
+
+function stateToBytes(e, score) {
+  var b = [1];
+  TIDS.forEach(function (id) { b.push(Math.round(e.skills[id] * 100)); });
+  TIDS.forEach(function (id) { b.push(e.diffs[id]); });
+  TIDS.forEach(function (id) { b.push(Math.min(255, e.streaksWin[id] || 0)); });
+  TIDS.forEach(function (id) { b.push(Math.min(255, e.lastSeen[id] || 0)); });
+  b.push((e.runde >> 8) & 255, e.runde & 255);
+  b.push((score >> 8) & 255, score & 255);
+  var sum = 0; for (var i = 1; i < b.length; i++) sum = (sum + b[i]) & 255;
+  b.push(sum);
+  return b;
+}
+function bytesToState(bytes) {
+  if (!bytes || bytes[0] !== 1) return null;
+  var sum = 0; for (var i = 1; i < bytes.length - 1; i++) sum = (sum + bytes[i]) & 255;
+  if (sum !== bytes[bytes.length - 1]) return null;
+  var e = initEngine(), score, runde;
+  for (var j = 0; j < 5; j++) {
+    e.skills[TIDS[j]] = bytes[1 + j] / 100;
+    e.diffs[TIDS[j]] = Math.max(1, Math.min(5, bytes[6 + j]));
+    e.streaksWin[TIDS[j]] = bytes[11 + j];
+    e.lastSeen[TIDS[j]] = bytes[16 + j];
+  }
+  e.runde = (bytes[21] << 8) | bytes[22];
+  score = (bytes[23] << 8) | bytes[24];
+  return { engine: e, score: score };
+}
+function bytesToCode(b) { var s = ""; for (var i = 0; i < b.length; i++) s += String.fromCharCode(b[i]); return btoa(s); }
+function codeToBytes(code) {
+  try {
+    var t = (code || "").replace(/\s+/g, "");
+    var h = t.lastIndexOf("#"); if (h >= 0) t = t.slice(h + 1);
+    var q = t.indexOf("?"); if (q >= 0) t = t.slice(0, q);
+    var s = atob(t); var r = []; for (var i = 0; i < s.length; i++) r.push(s.charCodeAt(i));
+    return r.length >= 25 ? r : null;
+  } catch (e) { return null; }
+}
+function ladeAusHash() {
+  try {
+    var hash = location.hash;
+    if (!hash || hash.length < 2) return false;
+    var res = bytesToState(codeToBytes(hash.substring(1)));
+    if (!res) return false;
+    engine = res.engine; score = res.score;
+    history.replaceState(null, "", location.pathname + location.search);
+    return true;
+  } catch (e) { return false; }
+}
+function shareLink() {
+  var base = location.href.split("#")[0];
+  return base + "#" + bytesToCode(stateToBytes(engine, score));
+}
+
+var scormAPI = null;
+(function () {
+  try {
+    var w = window;
+    while (w.parent && w.parent !== w) { if (w.parent.API) { scormAPI = w.parent.API; return; } w = w.parent; }
+    if (window.opener && window.opener.API) scormAPI = window.opener.API;
+  } catch (e) {}
+})();
+var lmsAktiv = false;
+function lmsInit() {
+  if (!scormAPI) return;
+  lmsAktiv = scormAPI.LMSInitialize("") === "true";
+  if (!lmsAktiv) return;
+  var sd = scormAPI.LMSGetValue("cmi.suspend_data");
+  var res = (sd && codeToBytes(sd)) ? bytesToState(codeToBytes(sd)) : null;
+  if (!window._hashGeladen) {
+    var lokaler = ladeLokal();
+    var lokalRes = (lokaler && codeToBytes(lokaler)) ? bytesToState(codeToBytes(lokaler)) : null;
+    var quelle = res || lokalRes;
+    if (quelle) { engine = quelle.engine; score = quelle.score; }
+  }
+  scormAPI.LMSSetValue("cmi.core.lesson_status", "incomplete");
+  scormAPI.LMSCommit("");
+}
+function lmsSync() {
+  if (!lmsAktiv || !scormAPI) return;
+  var pct = engine.runde > 0 ? Math.round(score / engine.runde * 100) : 0;
+  scormAPI.LMSSetValue("cmi.core.score.raw", pct);
+  scormAPI.LMSSetValue("cmi.core.score.min", "0");
+  scormAPI.LMSSetValue("cmi.core.score.max", "100");
+  scormAPI.LMSSetValue("cmi.core.lesson_status", engine.runde >= 10 ? "completed" : "incomplete");
+  scormAPI.LMSSetValue("cmi.suspend_data", bytesToCode(stateToBytes(engine, score)));
+  scormAPI.LMSCommit("");
+}
+function lmsFinish() { if (lmsAktiv && scormAPI) { try { scormAPI.LMSFinish(""); } catch (e) {} } }
+window.addEventListener("beforeunload", lmsFinish);
+
+var engine = initEngine(), score = 0, modus = "mc", aufgabe, ergebnis = null, auswahl = null, startZeit = 0, panelOffen = false;
+
+function ladeLokal() { try { return localStorage.getItem(SPEICHER_KEY); } catch (e) { return null; } }
+function speichere() {
+  try { localStorage.setItem(SPEICHER_KEY, bytesToCode(stateToBytes(engine, score))); return true; } catch (e) { return false; }
+}
+function ladeLokalInState() {
+  var c = ladeLokal();
+  if (!c) return;
+  var res = bytesToState(codeToBytes(c));
+  if (res) { engine = res.engine; score = res.score; }
+}
+function neueAufgabe() {
+  var tid = waehleThema(engine);
+  aufgabe = makeAufgabe(tid, engine.diffs[tid]);
+  ergebnis = null; auswahl = null;
+  startZeit = Date.now();
+  render();
+}
+function beantworten(wert) {
+  if (ergebnis !== null) return;
+  var richtig = Number(wert) === aufgabe.antwort;
+  auswahl = Number(wert); ergebnis = richtig;
+  if (richtig) score++;
+  feedback(engine, aufgabe.themaId, richtig, (Date.now() - startZeit) / 1000);
+  speichere(); lmsSync();
+  render();
+}
+function weiter() { neueAufgabe(); }
+function setModus(m) { modus = m; render(); }
+function zuruecksetzen() {
+  try { localStorage.removeItem(SPEICHER_KEY); } catch (e) {}
+  engine = initEngine(); score = 0;
+  if (lmsAktiv && scormAPI) { scormAPI.LMSSetValue("cmi.suspend_data", ""); scormAPI.LMSCommit(""); }
+  neueAufgabe(); renderStatus();
+}
+function togglePanel() { panelOffen = !panelOffen; renderPanel(); }
+function codeKopieren() {
+  var ta = document.getElementById("exportCode");
+  ta.select();
+  try { document.execCommand("copy"); if (navigator.clipboard) navigator.clipboard.writeText(ta.value); } catch (e) {}
+}
+function codeLaden() {
+  var res = bytesToState(codeToBytes(document.getElementById("importCode").value));
+  var msg = document.getElementById("importMsg");
+  if (!res) { msg.className = "msg no"; msg.textContent = "❌ Ungültiger Code – bitte vollständig kopieren."; return; }
+  engine = res.engine; score = res.score;
+  speichere(); lmsSync();
+  msg.className = "msg ok"; msg.textContent = "✅ Spielstand übernommen!";
+  neueAufgabe(); renderStatus();
+}
+function renderStatus() {
+  document.getElementById("scoreEl").textContent = score;
+  document.getElementById("rundeEl").textContent = "Punkte · Runde " + engine.runde;
+}
+function renderSkills() {
+  var html = "";
+  THEMEN.forEach(function (t) {
+    var p = engine.skills[t.id];
+    var farbe = p > 0.7 ? "#10b981" : p > 0.4 ? "#fbbf24" : "#fb7185";
+    html += '<div class="skill"><div class="name">' + t.name + '</div><div class="bar"><div style="width:' +
+      (p * 100) + '%;background:' + farbe + '"></div></div><div class="st">St. ' + engine.diffs[t.id] + "</div></div>";
+  });
+  document.getElementById("skills").innerHTML = html;
+  document.getElementById("analyseEl").innerHTML = "<b>🤖 Trainer-Analyse:</b> " + tippFuer(engine);
+}
+function renderAufgabe() {
+  var thema = THEMEN.filter(function (t) { return t.id === aufgabe.themaId; })[0];
+  document.getElementById("themaBadge").textContent = thema.name.toUpperCase();
+  document.getElementById("frageEl").textContent = aufgabe.frage;
+  document.getElementById("tabMC").className = modus === "mc" ? "aktiv" : "";
+  document.getElementById("tabIN").className = modus === "input" ? "aktiv" : "";
+  var box = document.getElementById("antwortBox"), html = "";
+  if (modus === "mc") {
+    var opt = [aufgabe.antwort].concat(aufgabe.distr);
+    while (opt.length < 4) { var x = aufgabe.antwort + (opt.length * 2); if (opt.indexOf(x) === -1 && x >= 0) opt.push(x); else break; }
+    opt.sort(function () { return Math.random() - 0.5; });
+    opt.forEach(function (o) {
+      var cls = "";
+      if (ergebnis !== null) {
+        if (o === aufgabe.antwort) cls = "richtig";
+        else if (o === auswahl) cls = "falsch";
+        else cls = "gedimmt";
+      }
+      html += '<button class="' + cls + '" ' + (ergebnis !== null ? "disabled" : "onclick=\"beantworten(" + o + ')"') + ">" + o + "</button>";
+    });
+    box.className = "mc"; box.innerHTML = html;
+  } else {
+    html = '<input id="eingabeIn" type="number" inputmode="numeric" placeholder="?" ' +
+      (ergebnis !== null ? 'value="' + auswahl + '" disabled' : "") +
+      ' onkeydown="if(event.key===\'Enter\')beantworten(this.value)">' +
+      '<button ' + (ergebnis !== null ? "disabled" : 'onclick="beantworten(document.getElementById(\'eingabeIn\').value)"') + ">OK</button>";
+    box.className = "eingabe"; box.innerHTML = html;
+    if (ergebnis === null) { var inp = document.getElementById("eingabeIn"); inp.focus(); }
+  }
+  var fb = document.getElementById("feedbackBox");
+  if (ergebnis !== null) {
+    var zusatz = ergebnis && aufgabe.hinweis ? ' 💡 <span class="hinweis">' + aufgabe.hinweis + "</span>" : "";
+    zusatz = zusatz || (!ergebnis && aufgabe.hinweis ? '<br><span class="hinweis">💡 ' + aufgabe.hinweis + "</span>" : "");
+    fb.innerHTML = '<div class="feedback ' + (ergebnis ? "ok" : "no") + '">' +
+      (ergebnis ? "✅ Richtig!" : "❌ Leider falsch. Richtig ist " + aufgabe.antwort + ".") +
+      zusatz +
+      '</div><button class="weiter" onclick="weiter()">Nächste Aufgabe →</button>';
+  } else fb.innerHTML = "";
+}
+function renderPanel() {
+  document.getElementById("panelBody").className = panelOffen ? "panel-body offen" : "panel-body";
+  document.getElementById("panelPfeil").textContent = panelOffen ? "▾" : "▸";
+  if (!panelOffen) return;
+  var code = bytesToCode(stateToBytes(engine, score));
+  var link = shareLink();
+  document.getElementById("exportCode").value = link;
+  var linkBytes = [];
+  for (var li = 0; li < link.length; li++) linkBytes.push(link.charCodeAt(li));
+  var m = qrMake(linkBytes), svg = "";
+  if (m) {
+    var n = m.length + 8, rects = "";
+    for (var y = 0; y < m.length; y++) for (var x = 0; x < m.length; x++)
+      if (m[y][x]) rects += '<rect x="' + (x + 4) + '" y="' + (y + 4) + '" width="1" height="1" fill="black"/>';
+    svg = '<svg viewBox="0 0 ' + n + " " + n + '" xmlns="http://www.w3.org/2000/svg"><rect width="100%" height="100%" fill="white"/>' + rects + "</svg>";
+  } else svg = "<p>Zu groß.</p>";
+  document.getElementById("qr").innerHTML = svg;
+}
+function render() {
+  renderStatus();
+  renderSkills();
+  renderGadgets(score);
+  renderAufgabe();
+  if (panelOffen) renderPanel();
+}
+
+document.addEventListener("keydown", function (e) {
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") { e.preventDefault(); speichere(); renderStatus(); }
+});
+
+(function start() {
+  window._hashGeladen = ladeAusHash();
+  if (window._hashGeladen) { speichere(); lmsSync(); }
+  else if (scormAPI) { lmsInit(); }
+  else { ladeLokalInState(); }
+  neueAufgabe();
+})();
+</script>
+</body>
+</html>
