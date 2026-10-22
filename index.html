@@ -3,63 +3,70 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>🧮 Adaptiver Mathe-Trainer</title>
+<title>Adaptiver Mathe-Trainer 🚀</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: system-ui, -apple-system, sans-serif; background: #f8fafc; color: #1e293b; padding: 16px; }
+  body { font-family: system-ui, -apple-system, sans-serif; background: #0f172a; color: #f1f5f9; padding: 16px; }
   .wrap { max-width: 720px; margin: 0 auto; display: flex; flex-direction: column; gap: 12px; }
   .kopf { display: flex; justify-content: space-between; align-items: flex-start; }
   h1 { font-size: 22px; }
-  .sub { font-size: 13px; color: #64748b; }
+  .sub { font-size: 13px; color: #94a3b8; }
   .punkte { text-align: right; }
-  .punkte .zahl { font-size: 28px; font-weight: 800; color: #4f46e5; }
+  .punkte .zahl { font-size: 28px; font-weight: 800; color: #38bdf8; }
   .punkte .label { font-size: 11px; color: #94a3b8; }
   .skills { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
-  .skill { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 8px 4px; text-align: center; }
+  .skill { background: #1e293b; border: 1px solid #334155; border-radius: 10px; padding: 8px 4px; text-align: center; }
   .skill .name { font-size: 11px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .skill .bar { height: 6px; background: #f1f5f9; border-radius: 99px; overflow: hidden; margin: 5px 6px 3px; }
+  .skill .bar { height: 6px; background: #334155; border-radius: 99px; overflow: hidden; margin: 5px 6px 3px; }
   .skill .bar > div { height: 100%; border-radius: 99px; }
   .skill .st { font-size: 10px; color: #94a3b8; }
-  .leiste { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 8px 14px; font-size: 12px; color: #64748b; display: flex; justify-content: space-between; align-items: center; }
-  .leiste button, .panel-head button { background: none; border: none; color: #e11d48; font-size: 12px; font-weight: 600; cursor: pointer; text-decoration: underline; }
-  .card { background: #fff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 22px; box-shadow: 0 1px 2px rgba(0,0,0,.04); }
+  .gadgets { background: #1e293b; border: 1px solid #334155; border-radius: 10px; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; }
+  .gadget-reihe { display: flex; gap: 6px; }
+  .gadget { font-size: 22px; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: #334155; transition: .3s; }
+  .gadget.aktiv { background: #1e3a5f; box-shadow: 0 0 10px #38bdf888; animation: glow 1.5s ease-in-out infinite alternate; }
+  .gadget.leer { font-size: 14px; color: #475569; }
+  @keyframes glow { from { box-shadow: 0 0 5px #38bdf844; } to { box-shadow: 0 0 15px #38bdf8aa; } }
+  .gadget-titel { font-size: 13px; font-weight: 600; color: #38bdf8; white-space: nowrap; }
+  .leiste { background: #1e293b; border: 1px solid #334155; border-radius: 10px; padding: 8px 14px; font-size: 12px; color: #94a3b8; display: flex; justify-content: space-between; align-items: center; }
+  .leiste button, .panel-head button { background: none; border: none; color: #f87171; font-size: 12px; font-weight: 600; cursor: pointer; text-decoration: underline; }
+  .card { background: #1e293b; border: 1px solid #334155; border-radius: 16px; padding: 22px; box-shadow: 0 1px 2px rgba(0,0,0,.04); }
   .zeile { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
-  .badge { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: #4f46e5; background: #eef2ff; padding: 4px 10px; border-radius: 6px; }
-  .tabs { display: flex; gap: 2px; background: #f1f5f9; border-radius: 8px; padding: 3px; }
-  .tabs button { border: none; background: none; font-size: 12px; padding: 5px 10px; border-radius: 6px; color: #64748b; cursor: pointer; }
-  .tabs button.aktiv { background: #fff; color: #1e293b; font-weight: 600; box-shadow: 0 1px 2px rgba(0,0,0,.06); }
+  .badge { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: #38bdf8; background: #0f172a; padding: 4px 10px; border-radius: 6px; }
+  .tabs { display: flex; gap: 2px; background: #334155; border-radius: 8px; padding: 3px; }
+  .tabs button { border: none; background: none; font-size: 12px; padding: 5px 10px; border-radius: 6px; color: #94a3b8; cursor: pointer; }
+  .tabs button.aktiv { background: #1e293b; color: #f1f5f9; font-weight: 600; box-shadow: 0 1px 2px rgba(0,0,0,.06); }
   .frage { text-align: center; font-size: 42px; font-weight: 700; padding: 22px 0; letter-spacing: .03em; }
   .mc { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .mc button { font-size: 20px; font-weight: 600; padding: 14px; border-radius: 12px; border: 2px solid #e2e8f0; background: #fff; cursor: pointer; transition: background .15s; }
-  .mc button:hover:not(:disabled) { background: #eef2ff; }
-  .mc button.richtig { background: #d1fae5; border-color: #34d399; }
-  .mc button.falsch { background: #ffe4e6; border-color: #fb7185; }
+  .mc button { font-size: 20px; font-weight: 600; padding: 14px; border-radius: 12px; border: 2px solid #334155; background: #0f172a; color: #f1f5f9; cursor: pointer; transition: background .15s; }
+  .mc button:hover:not(:disabled) { background: #1e3a5f; }
+  .mc button.richtig { background: #064e3b; border-color: #34d399; }
+  .mc button.falsch { background: #7f1d1d; border-color: #fb7185; }
   .mc button.gedimmt { opacity: .55; }
   .eingabe { display: flex; gap: 8px; justify-content: center; }
-  .eingabe input { width: 130px; text-align: center; font-size: 22px; font-weight: 600; border: 2px solid #e2e8f0; border-radius: 12px; padding: 10px; }
-  .eingabe input:focus { outline: none; border-color: #818cf8; }
-  .eingabe button, .weiter { background: #4f46e5; color: #fff; font-weight: 600; border: none; border-radius: 12px; padding: 10px 22px; font-size: 14px; cursor: pointer; }
+  .eingabe input { width: 130px; text-align: center; font-size: 22px; font-weight: 600; border: 2px solid #334155; border-radius: 12px; padding: 10px; background: #0f172a; color: #f1f5f9; }
+  .eingabe input:focus { outline: none; border-color: #38bdf8; }
+  .eingabe button, .weiter { background: #38bdf8; color: #0f172a; font-weight: 600; border: none; border-radius: 12px; padding: 10px 22px; font-size: 14px; cursor: pointer; }
   .eingabe button:disabled { opacity: .4; cursor: default; }
   .feedback { margin-top: 16px; border-radius: 12px; padding: 14px; font-weight: 500; }
-  .feedback.ok { background: #ecfdf5; color: #047857; }
-  .feedback.no { background: #fff1f2; color: #be123c; }
-  .weiter { width: 100%; margin-top: 10px; background: #4f46e5; }
-  .weiter:hover { background: #4338ca; }
-  .analyse { background: #eef2ff; border: 1px solid #e0e7ff; border-radius: 14px; padding: 14px; font-size: 13px; color: #3730a3; }
-  .panel { background: #fff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 14px; }
-  .panel-head { width: 100%; display: flex; justify-content: space-between; align-items: center; font-weight: 600; font-size: 14px; background: none; border: none; cursor: pointer; color: #334155; }
+  .feedback.ok { background: #064e3b; color: #6ee7b7; }
+  .feedback.no { background: #7f1d1d; color: #fca5a5; }
+  .weiter { width: 100%; margin-top: 10px; background: #38bdf8; color: #0f172a; }
+  .weiter:hover { background: #0ea5e9; }
+  .analyse { background: #1e3a5f; border: 1px solid #334155; border-radius: 14px; padding: 14px; font-size: 13px; color: #7dd3fc; }
+  .panel { background: #1e293b; border: 1px solid #334155; border-radius: 16px; padding: 14px; }
+  .panel-head { width: 100%; display: flex; justify-content: space-between; align-items: center; font-weight: 600; font-size: 14px; background: none; border: none; cursor: pointer; color: #f1f5f9; }
   .panel-body { display: none; margin-top: 14px; grid-template-columns: 1fr 1fr; gap: 20px; }
   .panel-body.offen { display: grid; }
   .panel-body h4 { font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: #94a3b8; margin-bottom: 6px; }
   .qrbox { display: flex; flex-direction: column; align-items: center; gap: 4px; }
-  .qrbox svg { width: 170px; height: 170px; border: 1px solid #e2e8f0; border-radius: 8px; }
+  .qrbox svg { width: 170px; height: 170px; border: 1px solid #334155; border-radius: 8px; background: white; }
   .qrbox small { font-size: 10px; color: #94a3b8; }
-  .codefeld { width: 100%; font-family: monospace; font-size: 11px; border: 1px solid #e2e8f0; border-radius: 8px; padding: 7px; background: #f8fafc; resize: none; }
-  .copy { background: #4f46e5; color: #fff; border: none; border-radius: 8px; padding: 7px 14px; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap; }
-  .laden { width: 100%; background: #059669; color: #fff; border: none; border-radius: 10px; padding: 9px; font-size: 13px; font-weight: 600; cursor: pointer; margin-top: 8px; }
-  .laden:hover { background: #047857; }
+  .codefeld { width: 100%; font-family: monospace; font-size: 11px; border: 1px solid #334155; border-radius: 8px; padding: 7px; background: #0f172a; color: #f1f5f9; resize: none; }
+  .copy { background: #38bdf8; color: #0f172a; border: none; border-radius: 8px; padding: 7px 14px; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+  .laden { width: 100%; background: #38bdf8; color: #0f172a; border: none; border-radius: 10px; padding: 9px; font-size: 13px; font-weight: 600; cursor: pointer; margin-top: 8px; }
+  .laden:hover { background: #0ea5e9; }
   .msg { font-size: 12px; margin-top: 8px; }
-  .msg.ok { color: #059669; } .msg.no { color: #e11d48; }
+  .msg.ok { color: #6ee7b7; } .msg.no { color: #fca5a5; }
   @media (max-width: 640px) { .skills { grid-template-columns: repeat(5, 1fr); gap: 4px; } .panel-body { grid-template-columns: 1fr; } .frage { font-size: 32px; } }
 </style>
 </head>
@@ -67,7 +74,7 @@
 <div class="wrap">
   <div class="kopf">
     <div>
-      <h1>🧮 Adaptiver Mathe-Trainer</h1>
+      <h1>🧮 Adaptiver Mathe-Trainer 🚀</h1>
       <div class="sub">Die Mini-KI wählt Themen &amp; Schwierigkeit passend zu dir.</div>
     </div>
     <div class="punkte">
@@ -77,6 +84,12 @@
   </div>
 
   <div class="skills" id="skills"></div>
+
+  <!-- Gadget-Leiste -->
+  <div class="gadgets">
+    <span class="gadget-titel" id="gadgetTitel">🌍 Weltraum-Novize</span>
+    <div class="gadget-reihe" id="gadgetReihe"></div>
+  </div>
 
   <div class="leiste">
     <span id="saveStatus">💾 Auto-Save aktiv · mit Strg+S manuell speichern</span>
@@ -110,7 +123,7 @@
       <span class="badge" id="themaBadge">ADDITION</span>
       <div class="tabs">
         <button id="tabMC" onclick="setModus('mc')" class="aktiv">Multiple Choice</button>
-        <button id="tabIN" onclick="setModus('input')" class="aktiv">Freie Eingabe</button>
+        <button id="tabIN" onclick="setModus('input')">Freie Eingabe</button>
       </div>
     </div>
     <div class="frage" id="frageEl"></div>
@@ -137,126 +150,65 @@ var SPEICHER_KEY = "mathe-trainer-spielstand";
 
 function rnd(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
 
-/* ============================================================
-   Verbesserte Distraktor-Erzeugung (pädagogisch sinnvoll)
-   ============================================================ */
-function erzeugeDistraktoren(antwort, themaId, aufgabe) {
-  var fehler = [];
-
-  if (themaId === "add") {
-    // Addition: Klassiker-Fehler
-    fehler.push(antwort + 1);           // Einer vergessen/zuviel
-    fehler.push(antwort - 1);           // Einer zu wenig
-    fehler.push(antwort + 10);          // Zehnerüberschlag vergessen
-    fehler.push(antwort - 10);          // Zehner zu wenig
-  } else if (themaId === "sub") {
-    // Subtraktion: Typische Fehler
-    fehler.push(antwort + 1);
-    fehler.push(antwort - 1);
-    fehler.push(aufgabe.a - aufgabe.b + 2 * aufgabe.b); // "Kleiner minus größer"-Vertauschung
-    fehler.push(antwort + 10);
-  } else if (themaId === "mul") {
-    // Multiplikation: Nachbar-Reihe, verwechselte Operation
-    fehler.push((aufgabe.a - 1) * aufgabe.b);   // Eine Reihe tiefer
-    fehler.push(aufgabe.a * (aufgabe.b - 1));   // Anderer Faktor -1
-    fehler.push(aufgabe.a + aufgabe.b);          // Addiert statt multipliziert
-    fehler.push(aufgabe.a * aufgabe.b + aufgabe.a); // Einmal extra
-  } else if (themaId === "div") {
-    // Division: Ergebnis verwechselt, Divisor statt Ergebnis
-    fehler.push(aufgabe.b);                      // Divisor statt Ergebnis
-    fehler.push(Math.round(aufgabe.a / aufgabe.b) + 1); // Eins mehr
-    fehler.push(Math.round(aufgabe.a / aufgabe.b) - 1); // Eins weniger
-    fehler.push(aufgabe.a);                      // Dividend statt Ergebnis
-  } else if (themaId === "gemischt") {
-    // Gemischte Terme: Punkt vor Strich!
-    if (aufgabe.d <= 2) {
-      // a + b · c   → Klassiker: (a+b)·c
-      fehler.push((aufgabe.a + aufgabe.b) * aufgabe.c);   // Strich vor Punkt ❌
-      fehler.push(aufgabe.a + aufgabe.b + aufgabe.c);     // Alles addiert
-      fehler.push(aufgabe.a * aufgabe.b + aufgabe.c);     // Falsche Assoziation
-      fehler.push(aufgabe.a * aufgabe.c + aufgabe.b);     // Andere Klammerung
-    } else if (aufgabe.d === 3) {
-      // (a + b) · c   → Klammer vergessen: a + b·c
-      fehler.push(aufgabe.a + aufgabe.b * aufgabe.c);     // Klammer ignoriert
-      fehler.push((aufgabe.a + aufgabe.b) * aufgabe.c + aufgabe.c); // Zu viel
-      fehler.push(aufgabe.a * aufgabe.c + aufgabe.b);     // Falsch ausgeklammert
-    } else {
-      // a · b − c · e   → Punkt vor Strich
-      fehler.push(aufgabe.a * aufgabe.b + aufgabe.c * aufgabe.e); // Minus vergessen
-      fehler.push(aufgabe.a * (aufgabe.b - aufgabe.c) * aufgabe.e); // Falsche Klammer
-      fehler.push((aufgabe.a - aufgabe.c) * (aufgabe.b - aufgabe.e)); // Alles falsch
-      fehler.push(aufgabe.a * aufgabe.b - aufgabe.c - aufgabe.e); // Nur eine Mul
-    }
-  }
-
-  // Eindeutig machen: Keine Duplikate, nicht die richtige Antwort, keine negativen Zahlen
+function erzeugeDistraktoren(antwort, primäre, thema) {
   var uniq = [];
-  for (var i = 0; i < fehler.length; i++) {
-    var v = Math.round(fehler[i]);
-    if (v !== antwort && v >= 0 && uniq.indexOf(v) === -1) {
-      uniq.push(v);
-    }
+  primäre.forEach(function(f) {
+    if (f !== antwort && uniq.indexOf(f) === -1 && f >= 0) uniq.push(f);
+  });
+  var fallbacks = [antwort + 1, antwort - 1, antwort + 2, antwort - 2, antwort + 5, antwort - 5, antwort + 10];
+  for (var i = 0; i < fallbacks.length && uniq.length < 3; i++) {
+    var v = fallbacks[i];
+    if (v !== antwort && uniq.indexOf(v) === -1 && v >= 0) uniq.push(v);
   }
-
-  // Fallback: Immer 3 Distraktoren garantieren (mit nahen Werten auffüllen)
-  for (var delta = 1; uniq.length < 3 && delta < 50; delta++) {
-    [antwort + delta, antwort - delta].forEach(function (v) {
-      if (uniq.length < 3 && v !== antwort && uniq.indexOf(v) === -1 && v >= 0) {
-        uniq.push(v);
-      }
+  for (var delta = 1; uniq.length < 3 && delta < 30; delta++) {
+    [antwort + delta, antwort - delta].forEach(function(v) {
+      if (uniq.length < 3 && v !== antwort && uniq.indexOf(v) === -1 && v >= 0) uniq.push(v);
     });
   }
-
   return uniq.slice(0, 3);
 }
 
 function makeAufgabe(themaId, diff) {
-  var d = Math.max(1, Math.min(5, diff)), a, b, frage, antwort, c, e;
-  var aufgabe = { themaId: themaId, diff: d };
-
+  var d = Math.max(1, Math.min(5, diff)), a, b, frage, antwort, distr, c, e, prim;
   if (themaId === "add") {
     var max = [10, 20, 50, 100, 200][d - 1];
     a = rnd(2, max); b = rnd(2, max);
     frage = a + " + " + b; antwort = a + b;
-    aufgabe.a = a; aufgabe.b = b;
+    prim = [a + b + 1, a + b - 1, a + b + 10, a + b - 10];
   } else if (themaId === "sub") {
     var max2 = [10, 20, 50, 100, 200][d - 1];
     a = rnd(5, max2); b = rnd(2, a);
     frage = a + " − " + b; antwort = a - b;
-    aufgabe.a = a; aufgabe.b = b;
+    prim = [a - b + 1, a - b - 1, b - a, a - b + 10, a - b - 10];
   } else if (themaId === "mul") {
     var m = [5, 10, 12, 15, 20][d - 1];
     a = rnd(2, m); b = rnd(2, m);
     frage = a + " · " + b; antwort = a * b;
-    aufgabe.a = a; aufgabe.b = b;
+    prim = [(a-1)*b, a*(b-1), (a+1)*b, a*(b+1), a+b];
   } else if (themaId === "div") {
     var m2 = [5, 10, 12, 15, 20][d - 1];
     b = rnd(2, m2); antwort = rnd(2, m2); a = b * antwort;
     frage = a + " ÷ " + b; antwort = a / b;
-    aufgabe.a = a; aufgabe.b = b;
+    prim = [antwort + 1, antwort - 1, b, antwort * 2];
   } else {
     a = rnd(2, 5 * d); b = rnd(2, 5 * d); c = rnd(2, 3 * d);
     if (d <= 2) {
       frage = a + " + " + b + " · " + c;
-      antwort = a + b * c;  // ✅ Punkt vor Strich
-      aufgabe.a = a; aufgabe.b = b; aufgabe.c = c;
+      antwort = a + b * c;
+      prim = [(a + b) * c, a + b + c, a * b + c];
     } else if (d === 3) {
       frage = "(" + a + " + " + b + ") · " + c;
       antwort = (a + b) * c;
-      aufgabe.a = a; aufgabe.b = b; aufgabe.c = c;
+      prim = [a + b * c, (a + b) * c + c, a * b + c];
     } else {
       e = rnd(2, 4);
       frage = a + " · " + b + " − " + c + " · " + e;
       antwort = a * b - c * e;
-      aufgabe.a = a; aufgabe.b = b; aufgabe.c = c; aufgabe.e = e;
+      prim = [a * b + c * e, a * b - c * e + e, (a - c) * (b - e), a * b - c - e];
     }
   }
-
-  aufgabe.frage = frage;
-  aufgabe.antwort = antwort;
-  aufgabe.distr = erzeugeDistraktoren(antwort, themaId, aufgabe);
-
-  return aufgabe;
+  distr = erzeugeDistraktoren(antwort, prim, themaId);
+  return { themaId: themaId, frage: frage, antwort: antwort, distr: distr, diff: d };
 }
 
 function initEngine() {
@@ -285,6 +237,43 @@ function tippFuer(e) {
   var sortiert = THEMEN.slice().sort(function (a, b) { return e.skills[a.id] - e.skills[b.id]; });
   return "Schwächstes Thema: " + sortiert[0].name + " (" + Math.round(e.skills[sortiert[0].id] * 100) + "%) · Stärkstes: " + sortiert[4].name +
     " (" + Math.round(e.skills[sortiert[4].id] * 100) + "%). Nächste Aufgaben fokussieren " + sortiert[0].name + ".";
+}
+
+/* ============================================================
+   Gadget-System (Weltraum)
+   ============================================================ */
+var GADGETS = [
+  { emoji: "🌍", name: "Erde", punkte: 0 },
+  { emoji: "🌕", name: "Mond", punkte: 5 },
+  { emoji: "🚀", name: "Rakete", punkte: 15 },
+  { emoji: "🛸", name: "Raumstation", punkte: 30 },
+  { emoji: "👨‍🚀", name: "Astronaut", punkte: 50 },
+  { emoji: "🌌", name: "Galaxie", punkte: 75 },
+  { emoji: "👽", name: "Außerirdischer", punkte: 100 }
+];
+
+function titelFuerPunkte(p) {
+  if (p >= 100) return "👽 Weltraum-Legende";
+  if (p >= 75) return "🌌 Galaxis-Entdecker";
+  if (p >= 50) return "👨‍🚀 Astronaut";
+  if (p >= 30) return "🛸 Raumstations-Crew";
+  if (p >= 15) return "🚀 Raketen-Pilot";
+  if (p >= 5) return "🌕 Mondbesucher";
+  return "🌍 Weltraum-Novize";
+}
+
+function renderGadgets(score) {
+  var reihe = document.getElementById("gadgetReihe");
+  document.getElementById("gadgetTitel").textContent = titelFuerPunkte(score);
+  var html = "";
+  GADGETS.forEach(function(g) {
+    if (score >= g.punkte) {
+      html += '<div class="gadget aktiv" title="' + g.name + ' (' + g.punkte + ' Pkt)">' + g.emoji + '</div>';
+    } else {
+      html += '<div class="gadget leer" title="🔒 bei ' + g.punkte + ' Punkten">🔒</div>';
+    }
+  });
+  reihe.innerHTML = html;
 }
 
 /* ============================================================
@@ -388,8 +377,7 @@ function bytesToCode(b) { var s = ""; for (var i = 0; i < b.length; i++) s += St
 function codeToBytes(code) {
   try {
     var t = (code || "").replace(/\s+/g, "");
-    var h = t.lastIndexOf("#");
-    if (h >= 0) t = t.slice(h + 1);
+    var h = t.lastIndexOf("#"); if (h >= 0) t = t.slice(h + 1);
     var q = t.indexOf("?"); if (q >= 0) t = t.slice(0, q);
     var s = atob(t); var r = []; for (var i = 0; i < s.length; i++) r.push(s.charCodeAt(i));
     return r.length >= 25 ? r : null;
@@ -529,19 +517,13 @@ function renderAufgabe() {
   var box = document.getElementById("antwortBox"), html = "";
   if (modus === "mc") {
     var opt = [aufgabe.antwort].concat(aufgabe.distr);
-    // Sollte immer 4 Optionen ergeben (1 richtige + 3 Distraktoren)
-    // Falls nicht, mit nahen Werten auffüllen
-    for (var delta = 1; opt.length < 4 && delta < 50; delta++) {
-      [aufgabe.antwort + delta, aufgabe.antwort - delta].forEach(function (v) {
-        if (opt.length < 4 && v >= 0 && opt.indexOf(v) === -1) opt.push(v);
-      });
-    }
+    while (opt.length < 4) { var x = aufgabe.antwort + (opt.length * 3); if (opt.indexOf(x) === -1 && x >= 0) opt.push(x); else break; }
     opt.sort(function () { return Math.random() - 0.5; });
     opt.forEach(function (o) {
       var cls = "";
       if (ergebnis !== null) {
         if (o === aufgabe.antwort) cls = "richtig";
-        else if (o === Number(auswahl)) cls = "falsch";
+        else if (o === auswahl) cls = "falsch";
         else cls = "gedimmt";
       }
       html += '<button class="' + cls + '" ' + (ergebnis !== null ? "disabled" : "onclick=\"beantworten(" + o + ')"') + ">" + o + "</button>";
@@ -553,7 +535,7 @@ function renderAufgabe() {
       ' onkeydown="if(event.key===\'Enter\')beantworten(this.value)">' +
       '<button ' + (ergebnis !== null ? "disabled" : 'onclick="beantworten(document.getElementById(\'eingabeIn\').value)"') + ">OK</button>";
     box.className = "eingabe"; box.innerHTML = html;
-    if (ergebnis === null) { var inp = document.getElementById("eingabeIn"); if (inp) inp.focus(); }
+    if (ergebnis === null) { var inp = document.getElementById("eingabeIn"); inp.focus(); }
   }
   var fb = document.getElementById("feedbackBox");
   if (ergebnis !== null) {
@@ -581,7 +563,13 @@ function renderPanel() {
   } else svg = "<p>Zu groß.</p>";
   document.getElementById("qr").innerHTML = svg;
 }
-function render() { renderStatus(); renderSkills(); renderAufgabe(); if (panelOffen) renderPanel(); }
+function render() {
+  renderStatus();
+  renderSkills();
+  renderGadgets(score);
+  renderAufgabe();
+  if (panelOffen) renderPanel();
+}
 
 // Kürzel Strg+S
 document.addEventListener("keydown", function (e) {
