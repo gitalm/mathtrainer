@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bruchrechen-Trainer 🧮</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: system-ui, -apple-system, sans-serif; background: #0f172a; color: #f1f5f9; padding: 16px; }
+  .wrap { max-width: 720px; margin: 0 auto; display: flex; flex-direction: column; gap: 12px; }
+  .kopf { display: flex; justify-content: space-between; align-items: flex-start; }
+  h1 { font-size: 22px; }
+  .sub { font-size: 13px; color: #94a3b8; }
+  .punkte { text-align: right; }
+  .punkte .zahl { font-size: 28px; font-weight: 800; color: #38bdf8; }
+  .punkte .label { font-size: 11px; color: #94a3b8; }
+  .skills { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+  .skill { background: #1e293b; border: 1px solid #334155; border-radius: 10px; padding: 8px 4px; text-align: center; }
+  .skill .name { font-size: 11px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .skill .bar { height: 6px; background: #334155; border-radius: 99px; overflow: hidden; margin: 5px 6px 3px; }
+  .skill .bar > div { height: 100%; border-radius: 99px; }
+  .skill .st { font-size: 10px; color: #94a3b8; }
+  .gadgets { background: #1e293b; border: 1px solid #334155; border-radius: 10px; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; }
+  .gadget-reihe { display: flex; gap: 6px; }
+  .gadget { font-size: 22px; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: #334155; transition: .3s; }
+  .gadget.aktiv { background: #1e3a5f; box-shadow: 0 0 10px #38bdf888; animation: glow 1.5s ease-in-out infinite alternate; }
+  .gadget.leer { font-size: 14px; color: #475569; }
+  @keyframes glow { from { box-shadow: 0 0 5px #38bdf844; } to { box-shadow: 0 0 15px #38bdf8aa; } }
+  .gadget-titel { font-size: 13px; font-weight: 600; color: #38bdf8; white-space: nowrap; }
+  .leiste { background: #1e293b; border: 1px solid #334155; border-radius: 10px; padding: 8px 14px; font-size: 12px; color: #94a3b8; display: flex; justify-content: space-between; align-items: center; }
+  .leiste button, .panel-head button { background: none; border: none; color: #f87171; font-size: 12px; font-weight: 600; cursor: pointer; text-decoration: underline; }
+  .card { background: #1e293b; border: 1px solid #334155; border-radius: 16px; padding: 22px; box-shadow: 0 1px 2px rgba(0,0,0,.04); }
+  .zeile { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+  .badge { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: #38bdf8; background: #0f172a; padding: 4px 10px; border-radius: 6px; }
+  .tabs { display: flex; gap: 2px; background: #334155; border-radius: 8px; padding: 3px; }
+  .tabs button { border: none; background: none; font-size: 12px; padding: 5px 10px; border-radius: 6px; color: #94a3b8; cursor: pointer; }
+  .tabs button.aktiv { background: #1e293b; color: #f1f5f9; font-weight: 600; box-shadow: 0 1px 2px rgba(0,0,0,.06); }
+  .frage { text-align: center; font-size: 28px; font-weight: 700; padding: 24px 0; letter-spacing: .03em; line-height: 1.4; }
+  .frage .katex { font-size: 1.2em; }
+  .mc { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .mc button { font-size: 18px; font-weight: 600; padding: 14px; border-radius: 12px; border: 2px solid #334155; background: #0f172a; color: #f1f5f9; cursor: pointer; transition: background .15s; }
+  .mc button:hover:not(:disabled) { background: #1e3a5f; }
+  .mc button.richtig { background: #064e3b; border-color: #34d399; }
+  .mc button.falsch { background: #7f1d1d; border-color: #fb7185; }
+  .mc button.gedimmt { opacity: .55; }
+  .mc button .katex { font-size: 1em; }
+  .eingabe { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+  .eingabe input { width: 160px; text-align: center; font-size: 20px; font-weight: 600; border: 2px solid #334155; border-radius: 12px; padding: 10px; background: #0f172a; color: #f1f5f9; }
+  .eingabe input:focus { outline: none; border-color: #38bdf8; }
+  .eingabe button, .weiter { background: #38bdf8; color: #0f172a; font-weight: 600; border: none; border-radius: 12px; padding: 10px 22px; font-size: 14px; cursor: pointer; }
+  .eingabe button:disabled { opacity: .4; cursor: default; }
+  .feedback { margin-top: 16px; border-radius: 12px; padding: 14px; font-weight: 500; font-size: 15px; }
+  .feedback.ok { background: #064e3b; color: #6ee7b7; }
+  .feedback.no { background: #7f1d1d; color: #fca5a5; }
+  .feedback .katex { font-size: 1em; }
+  .feedback .hinweis { color: #fbbf24; font-weight: 700; }
+  .weiter { width: 100%; margin-top: 10px; background: #38bdf8; color: #0f172a; }
+  .weiter:hover { background: #0ea5e9; }
+  .analyse { background: #1e3a5f; border: 1px solid #334155; border-radius: 14px; padding: 14px; font-size: 13px; color: #7dd3fc; }
+  .panel { background: #1e293b; border: 1px solid #334155; border-radius: 16px; padding: 14px; }
+  .panel-head { width: 100%; display: flex; justify-content: space-between; align-items: center; font-weight: 600; font-size: 14px; background: none; border: none; cursor: pointer; color: #f1f5f9; }
+  .panel-body { display: none; margin-top: 14px; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .panel-body.offen { display: grid; }
+  .panel-body h4 { font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: #94a3b8; margin-bottom: 6px; }
+  .qrbox { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .qrbox svg { width: 170px; height: 170px; border: 1px solid #334155; border-radius: 8px; background: white; }
+  .qrbox small { font-size: 10px; color: #94a3b8; }
+  .codefeld { width: 100%; font-family: monospace; font-size: 11px; border: 1px solid #334155; border-radius: 8px; padding: 7px; background: #0f172a; color: #f1f5f9; resize: none; }
+  .copy { background: #38bdf8; color: #0f172a; border: none; border-radius: 8px; padding: 7px 14px; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+  .laden { width: 100%; background: #38bdf8; color: #0f172a; border: none; border-radius: 10px; padding: 9px; font-size: 13px; font-weight: 600; cursor: pointer; margin-top: 8px; }
+  .laden:hover { background: #0ea5e9; }
+  .msg { font-size: 12px; margin-top: 8px; }
+  .msg.ok { color: #6ee7b7; } .msg.no { color: #fca5a5; }
+  @media (max-width: 640px) { .skills { grid-template-columns: repeat(5, 1fr); gap: 4px; } .panel-body { grid-template-columns: 1fr; } .frage { font-size: 22px; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="kopf">
+    <div>
+      <h1>🧮 Bruchrechen-Trainer</h1>
+      <div class="sub">Adaptive KI – Brüche addieren, subtrahieren, multiplizieren &amp; dividieren</div>
+    </div>
+    <div class="punkte">
+      <div class="zahl" id="scoreEl">0</div>
+      <div class="label" id="rundeEl">Punkte · Runde 0</div>
+    </div>
+  </div>
+
+  <div class="skills" id="skills"></div>
+
+  <div class="gadgets">
+    <span class="gadget-titel" id="gadgetTitel">🌍 Weltraum-Novize</span>
+    <div class="gadget-reihe" id="gadgetReihe"></div>
+  </div>
+
+  <div class="leiste">
+    <span id="saveStatus">💾 Auto-Save aktiv · mit Strg+S manuell speichern</span>
+    <button onclick="zuruecksetzen()">Spielstand löschen</button>
+  </div>
+
+  <div class="panel">
+    <button class="panel-head" onclick="togglePanel()">
+      <span>📱 Auf anderem Gerät weitermachen (QR / Code)</span><span id="panelPfeil">▸</span>
+    </button>
+    <div class="panel-body" id="panelBody">
+      <div>
+        <h4>Spielstand exportieren</h4>
+        <div class="qrbox"><div id="qr"></div><small>QR scannen → Website öffnet sich mit deinem Spielstand</small></div>
+        <div style="display:flex;gap:6px;margin-top:8px">
+          <textarea class="codefeld" id="exportCode" rows="2" readonly></textarea>
+          <button class="copy" onclick="codeKopieren()">Kopieren</button>
+        </div>
+      </div>
+      <div>
+        <h4>Spielstand laden</h4>
+        <textarea class="codefeld" id="importCode" rows="3" placeholder="Code hier einfügen (vom QR-Scan oder kopiert)…"></textarea>
+        <button class="laden" onclick="codeLaden()">Spielstand übernehmen</button>
+        <div class="msg" id="importMsg"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="zeile">
+      <span class="badge" id="themaBadge">BRÜCHE ADDITION</span>
+      <div class="tabs">
+        <button id="tabMC" onclick="setModus('mc')" class="aktiv">Multiple Choice</button>
+        <button id="tabIN" onclick="setModus('input')">Freie Eingabe</button>
+      </div>
+    </div>
+    <div class="frage" id="frageEl"></div>
+    <div id="antwortBox"></div>
+    <div id="feedbackBox"></div>
+  </div>
+
+  <div class="analyse" id="analyseEl"></div>
+</div>
+
+<script>
+/* ============================================================
+   KaTeX-Hilfsfunktion
+   ============================================================ */
+function renderMath(tex) {
+  try {
+    return katex.renderToString(tex, { displayMode: false, throwOnError: false });
+  } catch(e) {
+    return tex;
+  }
+}
+
+function ggT(a, b) {
+  a = Math.abs(a); b = Math.abs(b);
+  while (b) { var t = b; b = a % b; a = t; }
+  return a;
+}
+
+function kgV(a, b) {
+  return (a * b) / ggT(a, b);
+}
+
+/* ============================================================
+   Bruch-Engine – 5 Themen: Addition, Subtraktion, Multiplikation,
+   Division, Gemischte (Kürzen + Doppelbrüche)
+   ============================================================ */
+var THEMEN = [
+  { id: "add", name: "Brüche addieren" },
+  { id: "sub", name: "Brüche subtrahieren" },
+  { id: "mul", name: "Brüche multiplizieren" },
+  { id: "div", name: "Brüche dividieren" },
+  { id: "gemischt", name: "Gemischte Aufgaben" }
+];
+var TIDS = THEMEN.map(function (t) { return t.id; });
+var SPEICHER_KEY = "bruchrechen-trainer";
+
+function rnd(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+
+function erzeugeDistraktoren(antwort, prim) {
+  var uniq = [];
+  prim.forEach(function(f) {
+    if (Math.abs(f - antwort) > 0.001 && uniq.indexOf(f) === -1 && f >= 0) uniq.push(f);
+  });
+  var fallbacks = [antwort + 1, antwort - 1, antwort + 2, antwort - 2, antwort + 0.5, antwort - 0.5];
+  for (var i = 0; i < fallbacks.length && uniq.length < 3; i++) {
+    var v = parseFloat(fallbacks[i].toFixed(4));
+    if (Math.abs(v - antwort) > 0.001 && uniq.indexOf(v) === -1 && v >= 0) uniq.push(v);
+  }
+  for (var delta = 0.25; uniq.length < 3 && delta < 10; delta += 0.25) {
+    [antwort + delta, antwort - delta].forEach(function(v) {
+      v = parseFloat(v.toFixed(4));
+      if (uniq.length < 3 && Math.abs(v - antwort) > 0.001 && uniq.indexOf(v) === -1 && v >= 0) uniq.push(v);
+    });
+  }
+  return uniq.slice(0, 3);
+}
+
+function makeBruchAufgabe(themaId, diff) {
+  var d = Math.max(1, Math.min(5, diff));
+  var z1, n1, z2, n2, ergZ, ergN, frageTex, antwort, prim = [], hinweis = "";
+  var gekuerzt = d >= 4;
+
+  function bruchTex(z, n) { return "\\frac{" + z + "}{" + n + "}"; }
+
+  if (themaId === "add") {
+    if (d === 1) {
+      // Gleicher Nenner
+      n1 = rnd(2, 6); z1 = rnd(1, n1 - 1); z2 = rnd(1, n1 - 1);
+      frageTex = bruchTex(z1, n1) + " + " + bruchTex(z2, n1);
+      ergZ = z1 + z2; ergN = n1;
+      hinweis = "Gleicher Nenner (" + n1 + "), Zähler addieren: " + z1 + " + " + z2 + " = " + ergZ;
+    } else if (d === 2) {
+      // Ein Nenner teilt den anderen
+      n1 = rnd(2, 5); n2 = n1 * rnd(2, 3); z1 = rnd(1, n1 - 1); z2 = rnd(1, n2 - 1);
+      frageTex = bruchTex(z1, n1) + " + " + bruchTex(z2, n2);
+      var faktor = n2 / n1;
+      ergZ = z1 * faktor + z2; ergN = n2;
+      hinweis = "Erweitere " + bruchTex(z1, n1) + " mit " + faktor + " → " + bruchTex(z1 * faktor, n2) + ", dann addieren";
+    } else if (d <= 4) {
+      // Verschiedene Nenner
+      n1 = rnd(2, 6); n2 = rnd(3, 8);
+      while (n2 === n1 || n2 % n1 === 0 || n1 % n2 === 0) n2 = rnd(3, 8);
+      z1 = rnd(1, n1 - 1); z2 = rnd(1, n2 - 1);
+      frageTex = bruchTex(z1, n1) + " + " + bruchTex(z2, n2);
+      var g = kgV(n1, n2);
+      var f1 = g / n1, f2 = g / n2;
+      ergZ = z1 * f1 + z2 * f2; ergN = g;
+      hinweis = "Hauptnenner: kgV(" + n1 + "," + n2 + ") = " + g + ", erweitere mit " + f1 + " und " + f2;
+    } else {
+      // Drei Brüche oder gemischt
+      n1 = rnd(2, 5); n2 = rnd(2, 5); var n3 = rnd(2, 5);
+      z1 = rnd(1, n1 - 1); z2 = rnd(1, n2 - 1); var z3 = rnd(1, n3 - 1);
+      frageTex = bruchTex(z1, n1) + " + " + bruchTex(z2, n2) + " + " + bruchTex(z3, n3);
+      var g3 = kgV(kgV(n1, n2), n3);
+      ergZ = z1 * (g3/n1) + z2 * (g3/n2) + z3 * (g3/n3); ergN = g3;
+      hinweis = "Drei Brüche → gemeinsamer Nenner " + g3;
+    }
+  } else if (themaId === "sub") {
+    if (d === 1) {
+      n1 = rnd(2, 6); z1 = rnd(2, n1); z2 = rnd(1, z1 - 1);
+      frageTex = bruchTex(z1, n1) + " - " + bruchTex(z2, n1);
+      ergZ = z1 - z2; ergN = n1;
+      hinweis = "Gleicher Nenner, Zähler subtrahieren: " + z1 + " - " + z2 + " = " + ergZ;
+    } else if (d === 2) {
+      n1 = rnd(2, 5); n2 = n1 * rnd(2, 3); z1 = rnd(2, n1); z2 = rnd(1, n2 - 1);
+      while (z1 * (n2/n1) <= z2) { z1 = rnd(2, n1); z2 = rnd(1, n2 - 1); }
+      frageTex = bruchTex(z1, n1) + " - " + bruchTex(z2, n2);
+      var faktor2 = n2 / n1;
+      ergZ = z1 * faktor2 - z2; ergN = n2;
+      hinweis = "Erweitere " + bruchTex(z1, n1) + " mit " + faktor2 + ", dann subtrahieren";
+    } else if (d <= 4) {
+      n1 = rnd(2, 6); n2 = rnd(3, 8);
+      while (n2 === n1 || n2 % n1 === 0 || n1 % n2 === 0) n2 = rnd(3, 8);
+      z1 = rnd(2, n1); z2 = rnd(1, n2 - 1);
+      var g2 = kgV(n1, n2);
+      var f1b = g2 / n1, f2b = g2 / n2;
+      while (z1 * f1b <= z2 * f2b) { z1 = rnd(2, n1); z2 = rnd(1, n2 - 1); }
+      frageTex = bruchTex(z1, n1) + " - " + bruchTex(z2, n2);
+      ergZ = z1 * f1b - z2 * f2b; ergN = g2;
+      hinweis = "Hauptnenner: " + g2 + ", erweitere mit " + f1b + " und " + f2b;
+    } else {
+      n1 = rnd(3, 7); n2 = rnd(2, 5);
+      z1 = rnd(n1 + 1, 2 * n1); z2 = rnd(1, n2 - 1); // unechter Bruch minus echter
+      frageTex = bruchTex(z1, n1) + " - " + bruchTex(z2, n2);
+      var g4 = kgV(n1, n2);
+      ergZ = z1 * (g4/n1) - z2 * (g4/n2); ergN = g4;
+      hinweis = "Gemischte Nenner → Hauptnenner " + g4;
+    }
+  } else if (themaId === "mul") {
+    if (d === 1) {
+      z1 = rnd(1, 5); n1 = rnd(2, 6); z2 = rnd(1, 5); n2 = rnd(2, 6);
+      frageTex = bruchTex(z1, n1) + " \\cdot " + bruchTex(z2, n2);
+      ergZ = z1 * z2; ergN = n1 * n2;
+      hinweis = "Zähler × Zähler, Nenner × Nenner: " + z1 + "·" + z2 + " = " + ergZ + ", " + n1 + "·" + n2 + " = " + ergN;
+    } else if (d === 2) {
+      var ganze = rnd(2, 5); z2 = rnd(1, 5); n2 = rnd(2, 6);
+      frageTex = ganze + " \\cdot " + bruchTex(z2, n2);
+      ergZ = ganze * z2; ergN = n2;
+      hinweis = ganze + " \\cdot " + bruchTex(z2, n2) + " = " + bruchTex(ganze * z2, n2) + " (ganze Zahl als Bruch: " + bruchTex(ganze, 1) + ")";
+    } else if (d <= 4) {
+      z1 = rnd(2, 7); n1 = rnd(3, 8); z2 = rnd(2, 7); n2 = rnd(3, 8);
+      frageTex = bruchTex(z1, n1) + " \\cdot " + bruchTex(z2, n2);
+      ergZ = z1 * z2; ergN = n1 * n2;
+      // Kürzen erwünscht
+      var t = ggT(ergZ, ergN);
+      if (t > 1) hinweis = "Kürze mit " + t + ": " + bruchTex(ergZ, ergN) + " = " + bruchTex(ergZ/t, ergN/t);
+      else hinweis = "Zähler × Zähler, Nenner × Nenner";
+    } else {
+      // Drei Brüche
+      z1 = rnd(1, 4); n1 = rnd(2, 5); z2 = rnd(1, 4); n2 = rnd(2, 5); var z3 = rnd(1, 4), n3 = rnd(2, 5);
+      frageTex = bruchTex(z1, n1) + " \\cdot " + bruchTex(z2, n2) + " \\cdot " + bruchTex(z3, n3);
+      ergZ = z1 * z2 * z3; ergN = n1 * n2 * n3;
+      var t2 = ggT(ergZ, ergN);
+      if (t2 > 1) hinweis = "Kürze mit " + t2 + ": " + bruchTex(ergZ/t2, ergN/t2);
+      else hinweis = "Alle Zähler und Nenner multiplizieren";
+    }
+  } else if (themaId === "div") {
+    if (d === 1) {
+      z1 = rnd(1, 5); n1 = rnd(2, 6); z2 = rnd(1, 5); n2 = rnd(2, 6);
+      frageTex = bruchTex(z1, n1) + " : " + bruchTex(z2, n2);
+      ergZ = z1 * n2; ergN = n1 * z2;
+      hinweis = "Mit dem Kehrwert multiplizieren: " + bruchTex(z1, n1) + " \\cdot " + bruchTex(n2, z2);
+    } else if (d === 2) {
+      var ganze2 = rnd(2, 5); z2 = rnd(1, 4); n2 = rnd(2, 5);
+      frageTex = ganze2 + " : " + bruchTex(z2, n2);
+      ergZ = ganze2 * n2; ergN = z2;
+      hinweis = ganze2 + " : " + bruchTex(z2, n2) + " = " + ganze2 + " \\cdot " + bruchTex(n2, z2) + " = " + bruchTex(ergZ, ergN);
+    } else if (d <= 4) {
+      z1 = rnd(2, 6); n1 = rnd(3, 7); z2 = rnd(2, 6); n2 = rnd(3, 7);
+      frageTex = bruchTex(z1, n1) + " : " + bruchTex(z2, n2);
+      ergZ = z1 * n2; ergN = n1 * z2;
+      var t3 = ggT(ergZ, ergN);
+      if (t3 > 1) hinweis = "Kehrwert: " + bruchTex(z1, n1) + " \\cdot " + bruchTex(n2, z2) + ", kürze mit " + t3;
+      else hinweis = "Kehrwert: " + bruchTex(z1, n1) + " \\cdot " + bruchTex(n2, z2);
+    } else {
+      // Doppelbruch
+      var a = rnd(1, 4), b = rnd(2, 5), c = rnd(1, 4), d2 = rnd(2, 5);
+      frageTex = "\\frac{" + bruchTex(a, b) + "}{" + bruchTex(c, d2) + "}";
+      ergZ = a * d2; ergN = b * c;
+      hinweis = "Doppelbruch: " + bruchTex(a, b) + " : " + bruchTex(c, d2) + " = " + bruchTex(a, b) + " \\cdot " + bruchTex(d2, c);
+    }
+  } else {
+    // Gemischte Aufgaben (Kombinationen)
+    if (d <= 2) {
+      z1 = rnd(1, 4); n1 = rnd(2, 6); z2 = rnd(1, 4); n2 = rnd(2, 6);
+      var op = rnd(1, 2) === 1 ? " + " : " - ";
+      frageTex = bruchTex(z1, n1) + (op === " + " ? " + " : " - ") + bruchTex(z2, n2);
+      if (op === " + ") { ergZ = z1 * n2 + z2 * n1; ergN = n1 * n2; }
+      else { 
+        if (z1 * n2 < z2 * n1) { var tz = z1; z1 = z2; z2 = tz; var tn = n1; n1 = n2; n2 = tn; }
+        frageTex = bruchTex(z1, n1) + " - " + bruchTex(z2, n2);
+        ergZ = z1 * n2 - z2 * n1; ergN = n1 * n2;
+      }
+      hinweis = "Erweitere auf Hauptnenner " + (n1 * n2);
+    } else if (d <= 4) {
+      // Multiplikation + Addition
+      z1 = rnd(1, 3); n1 = rnd(2, 5); z2 = rnd(1, 3); n2 = rnd(2, 5); z3 = rnd(1, 3); n3 = rnd(2, 5);
+      frageTex = bruchTex(z1, n1) + " \\cdot " + bruchTex(z2, n2) + " + " + bruchTex(z3, n3);
+      var mulZ = z1 * z2, mulN = n1 * n2;
+      var gG = kgV(mulN, n3);
+      ergZ = mulZ * (gG/mulN) + z3 * (gG/n3); ergN = gG;
+      hinweis = "Punkt vor Strich! Erst " + bruchTex(z1, n1) + "·" + bruchTex(z2, n2) + " = " + bruchTex(mulZ, mulN);
+    } else {
+      // Alles kombiniert mit Klammern
+      z1 = rnd(1, 3); n1 = rnd(2, 4); z2 = rnd(1, 3); n2 = rnd(2, 4); z3 = rnd(1, 3); n3 = rnd(2, 4);
+      frageTex = "\\left(" + bruchTex(z1, n1) + " + " + bruchTex(z2, n2) + "\\right) \\cdot " + bruchTex(z3, n3);
+      var sumZ = z1 * n2 + z2 * n1, sumN = n1 * n2;
+      var t4 = ggT(sumZ, sumN);
+      sumZ /= t4; sumN /= t4;
+      ergZ = sumZ * z3; ergN = sumN * n3;
+      hinweis = "Klammer zuerst! " + bruchTex(z1, n1) + " + " + bruchTex(z2, n2) + " = " + bruchTex(sumZ, sumN);
+    }
+  }
+
+  // Kürzen
+  var ggtE = ggT(ergZ, ergN);
+  if (gekuerzt && ggtE > 1) {
+    var vorher = bruchTex(ergZ, ergN);
+    ergZ /= ggtE; ergN /= ggtE;
+    if (hinweis) hinweis += ", kürze mit " + ggtE + ": " + vorher + " = " + bruchTex(ergZ, ergN);
+  }
+
+  // Als Dezimalwert für Distraktoren
+  antwort = parseFloat((ergZ / ergN).toFixed(4));
+
+  // Primäre Distraktoren (typische Fehler)
+  prim = [
+    parseFloat(((ergZ + 1) / ergN).toFixed(4)),
+    parseFloat(((ergZ - 1) / ergN).toFixed(4)),
+    parseFloat(((ergZ + ergN) / ergN).toFixed(4)),
+    parseFloat((ergZ / (ergN + 1)).toFixed(4))
+  ];
+
+  var distr = erzeugeDistraktoren(antwort, prim);
+
+  // KaTeX-Frage
+  var frageTexFinal = "$\\displaystyle " + frageTex + "$";
+
+  return {
+    themaId: themaId,
+    frage: frageTexFinal,
+    antwort: antwort,
+    distr: distr,
+    diff: d,
+    hinweis: hinweis,
+    ergZ: ergZ,
+    ergN: ergN,
+    bruchStr: ergN === 1 ? "" + ergZ : "\\frac{" + ergZ + "}{" + ergN + "}"
+  };
+}
+
+function initEngine() {
+  var s = { skills: {}, diffs: {}, streaksWin: {}, lastSeen: {}, runde: 0, historie: [] };
+  TIDS.forEach(function (id) { s.skills[id] = 0.5; s.diffs[id] = 1; s.streaksWin[id] = 0; s.lastSeen[id] = 0; });
+  return s;
+}
+function waehleThema(e) {
+  var k = THEMEN.map(function (t) {
+    return { id: t.id, score: (1 - e.skills[t.id]) * 1.2 + Math.min(e.runde - (e.lastSeen[t.id] || 0), 5) * 0.3 };
+  }).sort(function (x, y) { return y.score - x.score; });
+  var top = k.slice(0, Math.min(3, k.length));
+  return Math.random() < 0.7 ? top[0].id : top[rnd(0, top.length - 1)].id;
+}
+function feedback(e, themaId, richtig, dauerSek) {
+  var k = richtig ? (dauerSek < 12 ? 0.06 : 0.04) : -0.08;
+  e.skills[themaId] = Math.max(0, Math.min(1, e.skills[themaId] + k));
+  e.streaksWin[themaId] = richtig ? e.streaksWin[themaId] + 1 : 0;
+  if (richtig && e.streaksWin[themaId] >= 2) { e.diffs[themaId] = Math.min(5, e.diffs[themaId] + 1); e.streaksWin[themaId] = 0; }
+  if (!richtig && e.diffs[themaId] > 1) e.diffs[themaId]--;
+  e.lastSeen[themaId] = e.runde + 1;
+  e.runde += 1;
+  return e;
+}
+function tippFuer(e) {
+  var sortiert = THEMEN.slice().sort(function (a, b) { return e.skills[a.id] - e.skills[b.id]; });
+  return "Schwächstes Thema: " + sortiert[0].name + " (" + Math.round(e.skills[sortiert[0].id] * 100) + "%) · Stärkstes: " + sortiert[4].name +
+    " (" + Math.round(e.skills[sortiert[4].id] * 100) + "%). Nächste Aufgaben fokussieren " + sortiert[0].name + ".";
+}
+
+/* ============================================================
+   Gadget-System
+   ============================================================ */
+var GADGETS = [
+  { emoji: "🌍", name: "Erde", punkte: 0 },
+  { emoji: "🌕", name: "Mond", punkte: 5 },
+  { emoji: "🚀", name: "Rakete", punkte: 15 },
+  { emoji: "🛸", name: "Raumstation", punkte: 30 },
+  { emoji: "👨‍🚀", name: "Astronaut", punkte: 50 },
+  { emoji: "🌌", name: "Galaxie", punkte: 75 },
+  { emoji: "👽", name: "Außerirdischer", punkte: 100 }
+];
+
+function titelFuerPunkte(p) {
+  if (p >= 100) return "👽 Bruch-Meister";
+  if (p >= 75) return "🌌 Galaxis-Entdecker";
+  if (p >= 50) return "👨‍🚀 Astronaut";
+  if (p >= 30) return "🛸 Raumstations-Crew";
+  if (p >= 15) return "🚀 Raketen-Pilot";
+  if (p >= 5) return "🌕 Mondbesucher";
+  return "🌍 Weltraum-Novize";
+}
+
+function renderGadgets(score) {
+  var reihe = document.getElementById("gadgetReihe");
+  document.getElementById("gadgetTitel").textContent = titelFuerPunkte(score);
+  var html = "";
+  GADGETS.forEach(function(g) {
+    if (score >= g.punkte) {
+      html += '<div class="gadget aktiv" title="' + g.name + ' (' + g.punkte + ' Pkt)">' + g.emoji + '</div>';
+    } else {
+      html += '<div class="gadget leer" title="🔒 bei ' + g.punkte + ' Punkten">🔒</div>';
+    }
+  });
+  reihe.innerHTML = html;
+}
+
+/* ============================================================
+   QR
+   ============================================================ */
+var QEXP = new Uint8Array(512), QLOG = new Uint8Array(256);
+(function () { var x = 1; for (var i = 0; i < 255; i++) { QEXP[i] = x; QLOG[x] = i; x <<= 1; if (x & 0x100) x ^= 0x11d; } for (var j = 255; j < 512; j++) QEXP[j] = QEXP[j - 255]; })();
+function qmul(a, b) { return (a && b) ? QEXP[QLOG[a] + QLOG[b]] : 0; }
+function qrGenPoly(n) { var g = [1]; for (var i = 0; i < n; i++) { var ng = new Array(g.length + 1).fill(0); for (var j = 0; j < g.length; j++) { ng[j] ^= g[j]; ng[j + 1] ^= qmul(g[j], QEXP[i]); } g = ng; } return g; }
+function qrRs(data, n) { var g = qrGenPoly(n), res = new Array(n).fill(0); for (var i = 0; i < data.length; i++) { var f = data[i] ^ res[0]; res.shift(); res.push(0); if (f) for (var k = 0; k < n; k++) res[k] ^= qmul(g[k + 1], f); } return res; }
+function qrEncodeData(bytes, v) {
+  var cap = [0, 19, 34, 55, 80, 108][v], ecN = [0, 7, 10, 15, 20, 26][v], bits = [];
+  function push(x, l) { for (var i = l - 1; i >= 0; i--) bits.push((x >> i) & 1); }
+  push(4, 4); push(bytes.length, 8);
+  for (var i = 0; i < bytes.length; i++) push(bytes[i], 8);
+  var max = cap * 8;
+  for (var j = 0; j < 4 && bits.length < max; j++) bits.push(0);
+  while (bits.length % 8) bits.push(0);
+  var out = []; for (var k = 0; k < bits.length; k += 8) { var x = 0; for (var m = 0; m < 8; m++) x = (x << 1) | bits[k + m]; out.push(x); }
+  var pads = [0xEC, 0x11], pi = 0;
+  while (out.length < cap) out.push(pads[pi++ % 2]);
+  return out.concat(qrRs(out, ecN));
+}
+function qrBuildMatrix(v, cw) {
+  var n = v * 4 + 17, m = [];
+  for (var y = 0; y < n; y++) { m.push(new Array(n).fill(null)); }
+  function set(yy, xx, val) { m[yy][xx] = val; }
+  function finder(fy, fx) {
+    for (var r = -1; r <= 7; r++) for (var c = -1; c <= 7; c++) {
+      var yy = fy + r, xx = fx + c; if (yy < 0 || yy >= n || xx < 0 || xx >= n) continue;
+      var d = (r >= 0 && r <= 6 && (c === 0 || c === 6)) || (c >= 0 && c <= 6 && (r === 0 || r === 6)) || (r >= 2 && r <= 4 && c >= 2 && c <= 4);
+      set(yy, xx, d ? 1 : 0);
+    }
+  }
+  finder(0, 0); finder(0, n - 7); finder(n - 7, 0);
+  for (var i = 8; i < n - 8; i++) { var t = i % 2 === 0 ? 1 : 0; if (m[6][i] === null) set(6, i, t); if (m[i][6] === null) set(i, 6, t); }
+  if (v >= 2) { var ap = 4 * v + 10; for (var r = -2; r <= 2; r++) for (var c = -2; c <= 2; c++) set(ap + r, ap + c, Math.max(Math.abs(r), Math.abs(c)) !== 1 ? 1 : 0); }
+  var dataBits = (0b01 << 3) | 0, d2 = dataBits << 10;
+  while (d2.toString(2).length >= 11) d2 ^= 0b10100110111 << (d2.toString(2).length - 11);
+  var fmt = ((dataBits << 10) | d2) ^ 0b101010000010010;
+  for (i = 0; i < 15; i++) {
+    var mod = (fmt >> i) & 1;
+    if (i < 6) set(i, 8, mod); else if (i < 8) set(i + 1, 8, mod); else set(n - 15 + i, 8, mod);
+    if (i < 8) set(8, n - i - 1, mod); else if (i < 9) set(8, 15 - i, mod); else set(8, 14 - i, mod);
+  }
+  set(n - 8, 8, 1);
+  var idx = 0, up = true;
+  for (var col = n - 1; col > 0; col -= 2) {
+    if (col === 6) col--;
+    for (i = 0; i < n; i++) {
+      var yy2 = up ? n - 1 - i : i;
+      for (var cc = 0; cc < 2; cc++) {
+        var xx2 = col - cc; if (m[yy2][xx2] !== null) continue;
+        var val = 0;
+        if (idx < cw.length * 8) { val = (cw[idx >> 3] >> (7 - (idx & 7))) & 1; idx++; }
+        if ((xx2 + yy2) % 2 === 0) val ^= 1;
+        set(yy2, xx2, val);
+      }
+    }
+    up = !up;
+  }
+  for (y = 0; y < n; y++) for (var x = 0; x < n; x++) if (m[y][x] === null) m[y][x] = 0;
+  return m;
+}
+function qrMake(bytes) {
+  for (var v = 1; v <= 5; v++) if (bytes.length + 2 <= [0, 19, 34, 55, 80, 108][v]) return qrBuildMatrix(v, qrEncodeData(bytes, v));
+  return null;
+}
+
+function stateToBytes(e, score) {
+  var b = [1];
+  TIDS.forEach(function (id) { b.push(Math.round(e.skills[id] * 100)); });
+  TIDS.forEach(function (id) { b.push(e.diffs[id]); });
+  TIDS.forEach(function (id) { b.push(Math.min(255, e.streaksWin[id] || 0)); });
+  TIDS.forEach(function (id) { b.push(Math.min(255, e.lastSeen[id] || 0)); });
+  b.push((e.runde >> 8) & 255, e.runde & 255);
+  b.push((score >> 8) & 255, score & 255);
+  var sum = 0; for (var i = 1; i < b.length; i++) sum = (sum + b[i]) & 255;
+  b.push(sum);
+  return b;
+}
+function bytesToState(bytes) {
+  if (!bytes || bytes[0] !== 1) return null;
+  var sum = 0; for (var i = 1; i < bytes.length - 1; i++) sum = (sum + bytes[i]) & 255;
+  if (sum !== bytes[bytes.length - 1]) return null;
+  var e = initEngine(), score, runde;
+  for (var j = 0; j < 5; j++) {
+    e.skills[TIDS[j]] = bytes[1 + j] / 100;
+    e.diffs[TIDS[j]] = Math.max(1, Math.min(5, bytes[6 + j]));
+    e.streaksWin[TIDS[j]] = bytes[11 + j];
+    e.lastSeen[TIDS[j]] = bytes[16 + j];
+  }
+  e.runde = (bytes[21] << 8) | bytes[22];
+  score = (bytes[23] << 8) | bytes[24];
+  return { engine: e, score: score };
+}
+function bytesToCode(b) { var s = ""; for (var i = 0; i < b.length; i++) s += String.fromCharCode(b[i]); return btoa(s); }
+function codeToBytes(code) {
+  try {
+    var t = (code || "").replace(/\s+/g, "");
+    var h = t.lastIndexOf("#"); if (h >= 0) t = t.slice(h + 1);
+    var q = t.indexOf("?"); if (q >= 0) t = t.slice(0, q);
+    var s = atob(t); var r = []; for (var i = 0; i < s.length; i++) r.push(s.charCodeAt(i));
+    return r.length >= 25 ? r : null;
+  } catch (e) { return null; }
+}
+function ladeAusHash() {
+  try {
+    var hash = location.hash;
+    if (!hash || hash.length < 2) return false;
+    var res = bytesToState(codeToBytes(hash.substring(1)));
+    if (!res) return false;
+    engine = res.engine; score = res.score;
+    history.replaceState(null, "", location.pathname + location.search);
+    return true;
+  } catch (e) { return false; }
+}
+function shareLink() {
+  var base = location.href.split("#")[0];
+  return base + "#" + bytesToCode(stateToBytes(engine, score));
+}
+
+var scormAPI = null;
+(function () {
+  try {
+    var w = window;
+    while (w.parent && w.parent !== w) { if (w.parent.API) { scormAPI = w.parent.API; return; } w = w.parent; }
+    if (window.opener && window.opener.API) scormAPI = window.opener.API;
+  } catch (e) {}
+})();
+var lmsAktiv = false;
+function lmsInit() {
+  if (!scormAPI) return;
+  lmsAktiv = scormAPI.LMSInitialize("") === "true";
+  if (!lmsAktiv) return;
+  var sd = scormAPI.LMSGetValue("cmi.suspend_data");
+  var res = (sd && codeToBytes(sd)) ? bytesToState(codeToBytes(sd)) : null;
+  if (!window._hashGeladen) {
+    var lokaler = ladeLokal();
+    var lokalRes = (lokaler && codeToBytes(lokaler)) ? bytesToState(codeToBytes(lokaler)) : null;
+    var quelle = res || lokalRes;
+    if (quelle) { engine = quelle.engine; score = quelle.score; }
+  }
+  scormAPI.LMSSetValue("cmi.core.lesson_status", "incomplete");
+  scormAPI.LMSCommit("");
+}
+function lmsSync() {
+  if (!lmsAktiv || !scormAPI) return;
+  var pct = engine.runde > 0 ? Math.round(score / engine.runde * 100) : 0;
+  scormAPI.LMSSetValue("cmi.core.score.raw", pct);
+  scormAPI.LMSSetValue("cmi.core.score.min", "0");
+  scormAPI.LMSSetValue("cmi.core.score.max", "100");
+  scormAPI.LMSSetValue("cmi.core.lesson_status", engine.runde >= 10 ? "completed" : "incomplete");
+  scormAPI.LMSSetValue("cmi.suspend_data", bytesToCode(stateToBytes(engine, score)));
+  scormAPI.LMSCommit("");
+}
+function lmsFinish() { if (lmsAktiv && scormAPI) { try { scormAPI.LMSFinish(""); } catch (e) {} } }
+window.addEventListener("beforeunload", lmsFinish);
+
+var engine = initEngine(), score = 0, modus = "mc", aufgabe, ergebnis = null, auswahl = null, startZeit = 0, panelOffen = false;
+
+function ladeLokal() { try { return localStorage.getItem(SPEICHER_KEY); } catch (e) { return null; } }
+function speichere() {
+  try { localStorage.setItem(SPEICHER_KEY, bytesToCode(stateToBytes(engine, score))); return true; } catch (e) { return false; }
+}
+function ladeLokalInState() {
+  var c = ladeLokal();
+  if (!c) return;
+  var res = bytesToState(codeToBytes(c));
+  if (res) { engine = res.engine; score = res.score; }
+}
+function neueAufgabe() {
+  var tid = waehleThema(engine);
+  aufgabe = makeBruchAufgabe(tid, engine.diffs[tid]);
+  ergebnis = null; auswahl = null;
+  startZeit = Date.now();
+  render();
+}
+function beantworten(wert) {
+  if (ergebnis !== null) return;
+  var num = parseFloat(parseFloat(wert).toFixed(4));
+  var richtig = Math.abs(num - aufgabe.antwort) < 0.005;
+  auswahl = num; ergebnis = richtig;
+  if (richtig) score++;
+  feedback(engine, aufgabe.themaId, richtig, (Date.now() - startZeit) / 1000);
+  speichere(); lmsSync();
+  render();
+}
+function weiter() { neueAufgabe(); }
+function setModus(m) { modus = m; render(); }
+function zuruecksetzen() {
+  try { localStorage.removeItem(SPEICHER_KEY); } catch (e) {}
+  engine = initEngine(); score = 0;
+  if (lmsAktiv && scormAPI) { scormAPI.LMSSetValue("cmi.suspend_data", ""); scormAPI.LMSCommit(""); }
+  neueAufgabe(); renderStatus();
+}
+function togglePanel() { panelOffen = !panelOffen; renderPanel(); }
+function codeKopieren() {
+  var ta = document.getElementById("exportCode");
+  ta.select();
+  try { document.execCommand("copy"); if (navigator.clipboard) navigator.clipboard.writeText(ta.value); } catch (e) {}
+}
+function codeLaden() {
+  var res = bytesToState(codeToBytes(document.getElementById("importCode").value));
+  var msg = document.getElementById("importMsg");
+  if (!res) { msg.className = "msg no"; msg.textContent = "❌ Ungültiger Code – bitte vollständig kopieren."; return; }
+  engine = res.engine; score = res.score;
+  speichere(); lmsSync();
+  msg.className = "msg ok"; msg.textContent = "✅ Spielstand übernommen!";
+  neueAufgabe(); renderStatus();
+}
+function renderStatus() {
+  document.getElementById("scoreEl").textContent = score;
+  document.getElementById("rundeEl").textContent = "Punkte · Runde " + engine.runde;
+}
+function renderSkills() {
+  var html = "";
+  THEMEN.forEach(function (t) {
+    var p = engine.skills[t.id];
+    var farbe = p > 0.7 ? "#10b981" : p > 0.4 ? "#fbbf24" : "#fb7185";
+    html += '<div class="skill"><div class="name">' + t.name + '</div><div class="bar"><div style="width:' +
+      (p * 100) + '%;background:' + farbe + '"></div></div><div class="st">St. ' + engine.diffs[t.id] + "</div></div>";
+  });
+  document.getElementById("skills").innerHTML = html;
+  document.getElementById("analyseEl").innerHTML = "<b>🤖 Trainer-Analyse:</b> " + tippFuer(engine);
+}
+function renderAufgabe() {
+  var thema = THEMEN.filter(function (t) { return t.id === aufgabe.themaId; })[0];
+  document.getElementById("themaBadge").textContent = thema.name.toUpperCase();
+  document.getElementById("frageEl").innerHTML = aufgabe.frage;
+  document.getElementById("tabMC").className = modus === "mc" ? "aktiv" : "";
+  document.getElementById("tabIN").className = modus === "input" ? "aktiv" : "";
+  var box = document.getElementById("antwortBox"), html = "";
+  if (modus === "mc") {
+    var opt = [aufgabe.antwort].concat(aufgabe.distr);
+    while (opt.length < 4) { var x = aufgabe.antwort + (opt.length * 0.2); if (opt.indexOf(x) === -1 && x >= 0) opt.push(parseFloat(x.toFixed(4))); else break; }
+    opt.sort(function () { return Math.random() - 0.5; });
+    opt.forEach(function (o) {
+      var cls = "";
+      if (ergebnis !== null) {
+        if (Math.abs(o - aufgabe.antwort) < 0.005) cls = "richtig";
+        else if (Math.abs(o - auswahl) < 0.005) cls = "falsch";
+        else cls = "gedimmt";
+      }
+      // Zeige als Dezimalzahl + optional als Bruch
+      var label = o;
+      if (Math.abs(o - aufgabe.antwort) < 0.005 && aufgabe.bruchStr) {
+        label = "$" + aufgabe.bruchStr + "$";
+      }
+      html += '<button class="' + cls + '" ' + (ergebnis !== null ? "disabled" : "onclick=\"beantworten(" + o + ')"') + ">" + label + "</button>";
+    });
+    box.className = "mc"; box.innerHTML = html;
+    // KaTeX für die Buttons rendern
+    if (window.katex) {
+      box.querySelectorAll("button").forEach(function(b) {
+        if (b.textContent.includes("$")) {
+          try {
+            b.innerHTML = katex.renderToString(b.textContent.replace(/\$/g, ""), { displayMode: false, throwOnError: false });
+          } catch(e) {}
+        }
+      });
+    }
+  } else {
+    html = '<input id="eingabeIn" type="number" step="any" inputmode="decimal" placeholder="Dezimalwert" ' +
+      (ergebnis !== null ? 'value="' + auswahl + '" disabled' : "") +
+      ' onkeydown="if(event.key===\'Enter\')beantworten(this.value)">' +
+      '<button ' + (ergebnis !== null ? "disabled" : 'onclick="beantworten(document.getElementById(\'eingabeIn\').value)"') + ">OK</button>" +
+      '<div style="font-size:12px;color:#94a3b8;width:100%;text-align:center;margin-top:4px;">Tipp: Gib den Dezimalwert ein (z. B. 0.75 für 3/4)</div>';
+    box.className = "eingabe"; box.innerHTML = html;
+    if (ergebnis === null) { var inp = document.getElementById("eingabeIn"); inp.focus(); }
+  }
+  var fb = document.getElementById("feedbackBox");
+  if (ergebnis !== null) {
+    var loesungBruch = aufgabe.bruchStr ? " $" + aufgabe.bruchStr + "$" : " " + aufgabe.antwort;
+    var zusatz = ergebnis && aufgabe.hinweis ? ' 💡 <span class="hinweis">' + aufgabe.hinweis + "</span>" : "";
+    zusatz = zusatz || (!ergebnis && aufgabe.hinweis ? '<br><span class="hinweis">💡 ' + aufgabe.hinweis + "</span>" : "");
+    fb.innerHTML = '<div class="feedback ' + (ergebnis ? "ok" : "no") + '">' +
+      (ergebnis ? "✅ Richtig!" : "❌ Leider falsch. Richtig wäre" + loesungBruch + ".") +
+      zusatz +
+      '</div><button class="weiter" onclick="weiter()">Nächste Aufgabe →</button>';
+    if (window.katex) {
+      fb.querySelectorAll(".katex").forEach(function(el) {});
+      // Ersetze manuelle $-Ausdrücke
+      fb.innerHTML = fb.innerHTML.replace(/\$(.+?)\$/g, function(m, tex) {
+        try { return katex.renderToString(tex, { displayMode: false, throwOnError: false }); } catch(e) { return m; }
+      });
+    }
+  } else fb.innerHTML = "";
+}
+function renderPanel() {
+  document.getElementById("panelBody").className = panelOffen ? "panel-body offen" : "panel-body";
+  document.getElementById("panelPfeil").textContent = panelOffen ? "▾" : "▸";
+  if (!panelOffen) return;
+  var code = bytesToCode(stateToBytes(engine, score));
+  var link = shareLink();
+  document.getElementById("exportCode").value = link;
+  var linkBytes = [];
+  for (var li = 0; li < link.length; li++) linkBytes.push(link.charCodeAt(li));
+  var m = qrMake(linkBytes), svg = "";
+  if (m) {
+    var n = m.length + 8, rects = "";
+    for (var y = 0; y < m.length; y++) for (var x = 0; x < m.length; x++)
+      if (m[y][x]) rects += '<rect x="' + (x + 4) + '" y="' + (y + 4) + '" width="1" height="1" fill="black"/>';
+    svg = '<svg viewBox="0 0 ' + n + " " + n + '" xmlns="http://www.w3.org/2000/svg"><rect width="100%" height="100%" fill="white"/>' + rects + "</svg>";
+  } else svg = "<p>Zu groß.</p>";
+  document.getElementById("qr").innerHTML = svg;
+}
+function render() {
+  renderStatus();
+  renderSkills();
+  renderGadgets(score);
+  renderAufgabe();
+  if (panelOffen) renderPanel();
+}
+
+document.addEventListener("keydown", function (e) {
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") { e.preventDefault(); speichere(); renderStatus(); }
+});
+
+(function start() {
+  window._hashGeladen = ladeAusHash();
+  if (window._hashGeladen) { speichere(); lmsSync(); }
+  else if (scormAPI) { lmsInit(); }
+  else { ladeLokalInState(); }
+  neueAufgabe();
+})();
+</script>
+</body>
+</html>
