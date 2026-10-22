@@ -90,7 +90,7 @@
     <div class="panel-body" id="panelBody">
       <div>
         <h4>Spielstand exportieren</h4>
-        <div class="qrbox"><div id="qr"></div><small>QR scannen → Code unten eingeben</small></div>
+        <div class="qrbox"><div id="qr"></div><small>QR scannen → Website öffnet sich mit deinem Spielstand</small></div>
         <div style="display:flex;gap:6px;margin-top:8px">
           <textarea class="codefeld" id="exportCode" rows="2" readonly></textarea>
           <button class="copy" onclick="codeKopieren()">Kopieren</button>
@@ -297,7 +297,31 @@ function bytesToState(bytes) {
 }
 function bytesToCode(b) { var s = ""; for (var i = 0; i < b.length; i++) s += String.fromCharCode(b[i]); return btoa(s); }
 function codeToBytes(code) {
-  try { var s = atob(code.replace(/\s+/g, "")); var r = []; for (var i = 0; i < s.length; i++) r.push(s.charCodeAt(i)); return r; } catch (e) { return null; }
+  try {
+    var t = (code || "").replace(/\s+/g, "");
+    var h = t.lastIndexOf("#"); // akzeptiert auch vollständigen QR-Link (URL#Code)
+    if (h >= 0) t = t.slice(h + 1);
+    var q = t.indexOf("?"); if (q >= 0) t = t.slice(0, q);
+    var s = atob(t); var r = []; for (var i = 0; i < s.length; i++) r.push(s.charCodeAt(i));
+    return r.length >= 25 ? r : null; // zu kurz => kein gültiger Spielstand
+  } catch (e) { return null; }
+}
+// Spielstand ggf. aus URL-Hash laden (QR-Link): URL#Code
+function ladeAusHash() {
+  try {
+    var hash = location.hash;
+    if (!hash || hash.length < 2) return false;
+    var res = bytesToState(codeToBytes(hash.substring(1)));
+    if (!res) return false;
+    engine = res.engine; score = res.score;
+    // Hash entfernen, damit Reload den (jetzt lokal gespeicherten) Stand nicht doppelt lädt
+    history.replaceState(null, "", location.pathname + location.search);
+    return true;
+  } catch (e) { return false; }
+}
+function shareLink() {
+  var base = location.href.split("#")[0];
+  return base + "#" + bytesToCode(stateToBytes(engine, score));
 }
 
 /* ============================================================
@@ -318,12 +342,13 @@ function lmsInit() {
   if (!lmsAktiv) return;
   // suspend_data als geräteunabhängiger Spielstand im LMS
   var sd = scormAPI.LMSGetValue("cmi.suspend_data");
-  var lokaler = ladeLokal();
   var res = (sd && codeToBytes(sd)) ? bytesToState(codeToBytes(sd)) : null;
-  var lokalRes = lokaler ? bytesToState(codeToBytes(lokaler)) : null;
-  // bevorzugt: LMS-Datenbank, sonst lokal, sonst frisch
-  var quelle = res || lokalRes;
-  if (quelle) { engine = quelle.engine; score = quelle.score; }
+  if (!window._hashGeladen) { // QR-Hash hat Vorrang, falls bereits geladen
+    var lokaler = ladeLokal();
+    var lokalRes = (lokaler && codeToBytes(lokaler)) ? bytesToState(codeToBytes(lokaler)) : null;
+    var quelle = res || lokalRes;
+    if (quelle) { engine = quelle.engine; score = quelle.score; }
+  }
   scormAPI.LMSSetValue("cmi.core.lesson_status", "incomplete");
   scormAPI.LMSCommit("");
 }
@@ -451,8 +476,11 @@ function renderPanel() {
   document.getElementById("panelPfeil").textContent = panelOffen ? "▾" : "▸";
   if (!panelOffen) return;
   var code = bytesToCode(stateToBytes(engine, score));
-  document.getElementById("exportCode").value = code;
-  var m = qrMake(stateToBytes(engine, score)), svg = "";
+  var link = shareLink();
+  document.getElementById("exportCode").value = link;
+  var linkBytes = [];
+  for (var li = 0; li < link.length; li++) linkBytes.push(link.charCodeAt(li));
+  var m = qrMake(linkBytes), svg = "";
   if (m) {
     var n = m.length + 8, rects = "";
     for (var y = 0; y < m.length; y++) for (var x = 0; x < m.length; x++)
@@ -468,9 +496,11 @@ document.addEventListener("keydown", function (e) {
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") { e.preventDefault(); speichere(); renderStatus(); }
 });
 
-// Start: LMS (falls vorhanden) > localStorage > frisch
+// Start: QR-Hash (falls gescannt) > LMS (falls vorhanden) > localStorage > frisch
 (function start() {
-  if (scormAPI) { lmsInit(); }
+  window._hashGeladen = ladeAusHash();
+  if (window._hashGeladen) { speichere(); lmsSync(); }
+  else if (scormAPI) { lmsInit(); }
   else { ladeLokalInState(); }
   neueAufgabe();
 })();
