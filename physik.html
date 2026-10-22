@@ -357,19 +357,30 @@ function renderAufgabe() {
     if (ergebnis === null) { var inp = document.getElementById("eingabeIn"); inp.focus(); }
   }
   
+  // ✅ KaTeX für die FRAGE rendern (Formeln mit $...$)
+  if (typeof katex !== 'undefined') {
+    var frageEl = document.getElementById("frageEl");
+    var frageHtml = frageEl.innerHTML;
+    frageHtml = frageHtml.replace(/\$(.+?)\$/g, function(m, tex) {
+      try { return katex.renderToString(tex, { displayMode: false, throwOnError: false }); } catch(e) { return m; }
+    });
+    frageEl.innerHTML = frageHtml;
+  }
+  
   var fb = document.getElementById("feedbackBox");
   if (ergebnis !== null) {
     var zusatz = aufgabe.hinweis ? ' 💡 <span class="hinweis">' + aufgabe.hinweis + "</span>" : "";
     var fbHtml = '<div class="feedback ' + (ergebnis ? "ok" : "no") + '">' + (ergebnis ? "✅ Richtig!" : "❌ Leider falsch. Richtig ist " + aufgabe.antwort + ".") + zusatz + '</div><button class="weiter" onclick="weiter()">Nächste Aufgabe →</button>';
     fb.innerHTML = fbHtml;
-    // KaTeX im Feedback rendern
-    try {
-      if (typeof katex !== 'undefined') {
-        fb.innerHTML = fb.innerHTML.replace(/\$(.+?)\$/g, function(m, tex) { try { return katex.renderToString(tex, { displayMode: false, throwOnError: false }); } catch(e) { return m; } });
-      }
-    } catch(e) {}
+    
+    // ✅ KaTeX im Feedback rendern
+    if (typeof katex !== 'undefined') {
+      fb.innerHTML = fb.innerHTML.replace(/\$(.+?)\$/g, function(m, tex) {
+        try { return katex.renderToString(tex, { displayMode: false, throwOnError: false }); } catch(e) { return m; }
+      });
+    }
   } else fb.innerHTML = "";
-}
+
 
 function renderPanel() {
   document.getElementById("panelBody").className = panelOffen ? "panel-body offen" : "panel-body";

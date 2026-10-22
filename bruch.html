@@ -293,15 +293,19 @@ function renderAufgabe() {
       html += '<button class="' + cls + '" ' + (ergebnis !== null ? "disabled" : "onclick=\"beantworten(" + o + ')"') + ">" + label + "</button>";
     });
     box.className = "mc"; box.innerHTML = html;
-    // KaTeX in den Buttons rendern
-    box.querySelectorAll('button').forEach(function(b) {
-      if (b.textContent.includes('\\')) {
-        try {
-          var tex = b.textContent;
-          b.innerHTML = katex.renderToString(tex, { displayMode: false, throwOnError: false });
-        } catch(e) {}
-      }
-    });
+    
+    // ✅ EINMAL KaTeX-Rendering für MC-Buttons (korrigiert)
+    if (typeof katex !== 'undefined') {
+      document.querySelectorAll('.mc button').forEach(function(b) {
+        var txt = b.textContent.trim();
+        if (txt.includes('\\')) {
+          try {
+            b.innerHTML = katex.renderToString(txt, { displayMode: false, throwOnError: false });
+          } catch(e) { /* Fallback: Text bleibt */ }
+        }
+      });
+    }
+
   } else {
     html = '<input id="eingabeIn" type="number" step="any" inputmode="decimal" placeholder="Dezimalwert (z.B. 0.75)" ' + (ergebnis !== null ? 'value="' + auswahl + '" disabled' : "") + ' onkeydown="if(event.key===\'Enter\')beantworten(this.value)"><button ' + (ergebnis !== null ? "disabled" : 'onclick="beantworten(document.getElementById(\'eingabeIn\').value)"') + ">OK</button>";
     box.className = "eingabe"; box.innerHTML = html;
@@ -319,6 +323,7 @@ function renderAufgabe() {
     renderAlleFormeln(fb);
   } else fb.innerHTML = "";
 }
+
 
 function renderPanel() {
   document.getElementById("panelBody").className = panelOffen ? "panel-body offen" : "panel-body";
