@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Adaptiver Mathe-Trainer</title>
+<title>🧮 Adaptiver Mathe-Trainer</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: system-ui, -apple-system, sans-serif; background: #f8fafc; color: #1e293b; padding: 16px; }
@@ -110,7 +110,7 @@
       <span class="badge" id="themaBadge">ADDITION</span>
       <div class="tabs">
         <button id="tabMC" onclick="setModus('mc')" class="aktiv">Multiple Choice</button>
-        <button id="tabIN" onclick="setModus('input')">Freie Eingabe</button>
+        <button id="tabIN" onclick="setModus('input')" class="aktiv">Freie Eingabe</button>
       </div>
     </div>
     <div class="frage" id="frageEl"></div>
@@ -137,37 +137,126 @@ var SPEICHER_KEY = "mathe-trainer-spielstand";
 
 function rnd(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
 
+/* ============================================================
+   Verbesserte Distraktor-Erzeugung (pädagogisch sinnvoll)
+   ============================================================ */
+function erzeugeDistraktoren(antwort, themaId, aufgabe) {
+  var fehler = [];
+
+  if (themaId === "add") {
+    // Addition: Klassiker-Fehler
+    fehler.push(antwort + 1);           // Einer vergessen/zuviel
+    fehler.push(antwort - 1);           // Einer zu wenig
+    fehler.push(antwort + 10);          // Zehnerüberschlag vergessen
+    fehler.push(antwort - 10);          // Zehner zu wenig
+  } else if (themaId === "sub") {
+    // Subtraktion: Typische Fehler
+    fehler.push(antwort + 1);
+    fehler.push(antwort - 1);
+    fehler.push(aufgabe.a - aufgabe.b + 2 * aufgabe.b); // "Kleiner minus größer"-Vertauschung
+    fehler.push(antwort + 10);
+  } else if (themaId === "mul") {
+    // Multiplikation: Nachbar-Reihe, verwechselte Operation
+    fehler.push((aufgabe.a - 1) * aufgabe.b);   // Eine Reihe tiefer
+    fehler.push(aufgabe.a * (aufgabe.b - 1));   // Anderer Faktor -1
+    fehler.push(aufgabe.a + aufgabe.b);          // Addiert statt multipliziert
+    fehler.push(aufgabe.a * aufgabe.b + aufgabe.a); // Einmal extra
+  } else if (themaId === "div") {
+    // Division: Ergebnis verwechselt, Divisor statt Ergebnis
+    fehler.push(aufgabe.b);                      // Divisor statt Ergebnis
+    fehler.push(Math.round(aufgabe.a / aufgabe.b) + 1); // Eins mehr
+    fehler.push(Math.round(aufgabe.a / aufgabe.b) - 1); // Eins weniger
+    fehler.push(aufgabe.a);                      // Dividend statt Ergebnis
+  } else if (themaId === "gemischt") {
+    // Gemischte Terme: Punkt vor Strich!
+    if (aufgabe.d <= 2) {
+      // a + b · c   → Klassiker: (a+b)·c
+      fehler.push((aufgabe.a + aufgabe.b) * aufgabe.c);   // Strich vor Punkt ❌
+      fehler.push(aufgabe.a + aufgabe.b + aufgabe.c);     // Alles addiert
+      fehler.push(aufgabe.a * aufgabe.b + aufgabe.c);     // Falsche Assoziation
+      fehler.push(aufgabe.a * aufgabe.c + aufgabe.b);     // Andere Klammerung
+    } else if (aufgabe.d === 3) {
+      // (a + b) · c   → Klammer vergessen: a + b·c
+      fehler.push(aufgabe.a + aufgabe.b * aufgabe.c);     // Klammer ignoriert
+      fehler.push((aufgabe.a + aufgabe.b) * aufgabe.c + aufgabe.c); // Zu viel
+      fehler.push(aufgabe.a * aufgabe.c + aufgabe.b);     // Falsch ausgeklammert
+    } else {
+      // a · b − c · e   → Punkt vor Strich
+      fehler.push(aufgabe.a * aufgabe.b + aufgabe.c * aufgabe.e); // Minus vergessen
+      fehler.push(aufgabe.a * (aufgabe.b - aufgabe.c) * aufgabe.e); // Falsche Klammer
+      fehler.push((aufgabe.a - aufgabe.c) * (aufgabe.b - aufgabe.e)); // Alles falsch
+      fehler.push(aufgabe.a * aufgabe.b - aufgabe.c - aufgabe.e); // Nur eine Mul
+    }
+  }
+
+  // Eindeutig machen: Keine Duplikate, nicht die richtige Antwort, keine negativen Zahlen
+  var uniq = [];
+  for (var i = 0; i < fehler.length; i++) {
+    var v = Math.round(fehler[i]);
+    if (v !== antwort && v >= 0 && uniq.indexOf(v) === -1) {
+      uniq.push(v);
+    }
+  }
+
+  // Fallback: Immer 3 Distraktoren garantieren (mit nahen Werten auffüllen)
+  for (var delta = 1; uniq.length < 3 && delta < 50; delta++) {
+    [antwort + delta, antwort - delta].forEach(function (v) {
+      if (uniq.length < 3 && v !== antwort && uniq.indexOf(v) === -1 && v >= 0) {
+        uniq.push(v);
+      }
+    });
+  }
+
+  return uniq.slice(0, 3);
+}
+
 function makeAufgabe(themaId, diff) {
-  var d = Math.max(1, Math.min(5, diff)), a, b, frage, antwort, distr, c, e;
+  var d = Math.max(1, Math.min(5, diff)), a, b, frage, antwort, c, e;
+  var aufgabe = { themaId: themaId, diff: d };
+
   if (themaId === "add") {
     var max = [10, 20, 50, 100, 200][d - 1];
     a = rnd(2, max); b = rnd(2, max);
     frage = a + " + " + b; antwort = a + b;
-    distr = [a + b + rnd(1, 3), a + b - rnd(1, 3), a + b + 10];
+    aufgabe.a = a; aufgabe.b = b;
   } else if (themaId === "sub") {
     var max2 = [10, 20, 50, 100, 200][d - 1];
     a = rnd(5, max2); b = rnd(2, a);
     frage = a + " − " + b; antwort = a - b;
-    distr = [a - b + rnd(1, 3), a - b - rnd(1, 3), a - b + 10];
+    aufgabe.a = a; aufgabe.b = b;
   } else if (themaId === "mul") {
     var m = [5, 10, 12, 15, 20][d - 1];
     a = rnd(2, m); b = rnd(2, m);
     frage = a + " · " + b; antwort = a * b;
-    distr = [a * b + a, a * b - b, a * (b + 1), (a + 1) * b];
+    aufgabe.a = a; aufgabe.b = b;
   } else if (themaId === "div") {
     var m2 = [5, 10, 12, 15, 20][d - 1];
     b = rnd(2, m2); antwort = rnd(2, m2); a = b * antwort;
     frage = a + " ÷ " + b; antwort = a / b;
-    distr = [antwort + 1, antwort - 1, antwort + b];
+    aufgabe.a = a; aufgabe.b = b;
   } else {
     a = rnd(2, 5 * d); b = rnd(2, 5 * d); c = rnd(2, 3 * d);
-    if (d <= 2) { frage = a + " + " + b + " · " + c; antwort = a + b * c; distr = [(a + b) * c, a + b * c + c, a * b + c]; }
-    else if (d === 3) { frage = "(" + a + " + " + b + ") · " + c; antwort = (a + b) * c; distr = [a + b * c, (a + b) * c + c, a * b + c]; }
-    else { e = rnd(2, 4); frage = a + " · " + b + " − " + c + " · " + e; antwort = a * b - c * e; distr = [a * b + c * e, a * b - c * e + e, (a - c) * (b - e)]; }
+    if (d <= 2) {
+      frage = a + " + " + b + " · " + c;
+      antwort = a + b * c;  // ✅ Punkt vor Strich
+      aufgabe.a = a; aufgabe.b = b; aufgabe.c = c;
+    } else if (d === 3) {
+      frage = "(" + a + " + " + b + ") · " + c;
+      antwort = (a + b) * c;
+      aufgabe.a = a; aufgabe.b = b; aufgabe.c = c;
+    } else {
+      e = rnd(2, 4);
+      frage = a + " · " + b + " − " + c + " · " + e;
+      antwort = a * b - c * e;
+      aufgabe.a = a; aufgabe.b = b; aufgabe.c = c; aufgabe.e = e;
+    }
   }
-  var uniq = [];
-  for (var i = 0; i < distr.length; i++) if (distr[i] !== antwort && uniq.indexOf(distr[i]) === -1) uniq.push(distr[i]);
-  return { themaId: themaId, frage: frage, antwort: antwort, distr: uniq.slice(0, 3), diff: d };
+
+  aufgabe.frage = frage;
+  aufgabe.antwort = antwort;
+  aufgabe.distr = erzeugeDistraktoren(antwort, themaId, aufgabe);
+
+  return aufgabe;
 }
 
 function initEngine() {
@@ -199,7 +288,7 @@ function tippFuer(e) {
 }
 
 /* ============================================================
-   QR-Code-Generator (reines JS, geprüft: RS-Syndrome = 0)
+   QR-Code-Generator (reines JS)
    ============================================================ */
 var QEXP = new Uint8Array(512), QLOG = new Uint8Array(256);
 (function () { var x = 1; for (var i = 0; i < 255; i++) { QEXP[i] = x; QLOG[x] = i; x <<= 1; if (x & 0x100) x ^= 0x11d; } for (var j = 255; j < 512; j++) QEXP[j] = QEXP[j - 255]; })();
@@ -299,14 +388,13 @@ function bytesToCode(b) { var s = ""; for (var i = 0; i < b.length; i++) s += St
 function codeToBytes(code) {
   try {
     var t = (code || "").replace(/\s+/g, "");
-    var h = t.lastIndexOf("#"); // akzeptiert auch vollständigen QR-Link (URL#Code)
+    var h = t.lastIndexOf("#");
     if (h >= 0) t = t.slice(h + 1);
     var q = t.indexOf("?"); if (q >= 0) t = t.slice(0, q);
     var s = atob(t); var r = []; for (var i = 0; i < s.length; i++) r.push(s.charCodeAt(i));
-    return r.length >= 25 ? r : null; // zu kurz => kein gültiger Spielstand
+    return r.length >= 25 ? r : null;
   } catch (e) { return null; }
 }
-// Spielstand ggf. aus URL-Hash laden (QR-Link): URL#Code
 function ladeAusHash() {
   try {
     var hash = location.hash;
@@ -314,7 +402,6 @@ function ladeAusHash() {
     var res = bytesToState(codeToBytes(hash.substring(1)));
     if (!res) return false;
     engine = res.engine; score = res.score;
-    // Hash entfernen, damit Reload den (jetzt lokal gespeicherten) Stand nicht doppelt lädt
     history.replaceState(null, "", location.pathname + location.search);
     return true;
   } catch (e) { return false; }
@@ -325,7 +412,7 @@ function shareLink() {
 }
 
 /* ============================================================
-   SCORM 1.2-Wrapper (Moodle/LMS); no-op wenn kein LMS (GitHub Pages)
+   SCORM 1.2-Wrapper (Moodle/LMS); no-op wenn kein LMS
    ============================================================ */
 var scormAPI = null;
 (function () {
@@ -340,10 +427,9 @@ function lmsInit() {
   if (!scormAPI) return;
   lmsAktiv = scormAPI.LMSInitialize("") === "true";
   if (!lmsAktiv) return;
-  // suspend_data als geräteunabhängiger Spielstand im LMS
   var sd = scormAPI.LMSGetValue("cmi.suspend_data");
   var res = (sd && codeToBytes(sd)) ? bytesToState(codeToBytes(sd)) : null;
-  if (!window._hashGeladen) { // QR-Hash hat Vorrang, falls bereits geladen
+  if (!window._hashGeladen) {
     var lokaler = ladeLokal();
     var lokalRes = (lokaler && codeToBytes(lokaler)) ? bytesToState(codeToBytes(lokaler)) : null;
     var quelle = res || lokalRes;
@@ -442,14 +528,20 @@ function renderAufgabe() {
   document.getElementById("tabIN").className = modus === "input" ? "aktiv" : "";
   var box = document.getElementById("antwortBox"), html = "";
   if (modus === "mc") {
-    var opt = [aufgabe.antwort].concat(aufgabe.distr), fill = -10;
-    while (opt.length < 4) { var x = aufgabe.antwort + fill; if (opt.indexOf(x) === -1) opt.push(x); fill += 7; }
+    var opt = [aufgabe.antwort].concat(aufgabe.distr);
+    // Sollte immer 4 Optionen ergeben (1 richtige + 3 Distraktoren)
+    // Falls nicht, mit nahen Werten auffüllen
+    for (var delta = 1; opt.length < 4 && delta < 50; delta++) {
+      [aufgabe.antwort + delta, aufgabe.antwort - delta].forEach(function (v) {
+        if (opt.length < 4 && v >= 0 && opt.indexOf(v) === -1) opt.push(v);
+      });
+    }
     opt.sort(function () { return Math.random() - 0.5; });
     opt.forEach(function (o) {
       var cls = "";
       if (ergebnis !== null) {
         if (o === aufgabe.antwort) cls = "richtig";
-        else if (o === auswahl) cls = "falsch";
+        else if (o === Number(auswahl)) cls = "falsch";
         else cls = "gedimmt";
       }
       html += '<button class="' + cls + '" ' + (ergebnis !== null ? "disabled" : "onclick=\"beantworten(" + o + ')"') + ">" + o + "</button>";
@@ -461,7 +553,7 @@ function renderAufgabe() {
       ' onkeydown="if(event.key===\'Enter\')beantworten(this.value)">' +
       '<button ' + (ergebnis !== null ? "disabled" : 'onclick="beantworten(document.getElementById(\'eingabeIn\').value)"') + ">OK</button>";
     box.className = "eingabe"; box.innerHTML = html;
-    if (ergebnis === null) { var inp = document.getElementById("eingabeIn"); inp.focus(); }
+    if (ergebnis === null) { var inp = document.getElementById("eingabeIn"); if (inp) inp.focus(); }
   }
   var fb = document.getElementById("feedbackBox");
   if (ergebnis !== null) {
